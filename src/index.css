@@ -74,3 +74,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+.input-icon-container {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+}

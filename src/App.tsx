@@ -1,35 +1,65 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import Auth from './pages/Auth';
+import Onboarding from './pages/Onboarding';
+import LandingPage from './pages/LandingPage';
+import Sidebar from './components/Sidebar';
+import TopBar from './components/Topbar';
+import Plants from './pages/Plants';
+import Plant from './pages/Plant';
+import Tasks from './pages/Tasks';
+import HealthLogs from './pages/HealthLogs';
+import HealthLog from './pages/HealthLog';
+import Profile from './pages/Profile';
+import Chat from './pages/Chat';
 
-function App() {
-  const [count, setCount] = useState(0)
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+const Navigate = () => {
+
+const [isAuthenticated, setisAuthenticated] = useState(true);
+  
+
+  return(
+    <div>
+      {isAuthenticated && (
+        <div className="flex flex-row bg-gray-200 w-screen h-screen">
+          <div className="z-10">
+            <Sidebar/>
+          </div>
+          <div className="flex flex-col">
+            <TopBar/>
+            <Routes>
+              <Route path='/plants' element={<Plants/>}/>
+              <Route path='/plant/:id' element={<Plant/>} />
+              <Route path='/tasks' element={<Tasks/>}/>
+              <Route path='/healthlogs' element={<HealthLogs/>}/>
+              <Route path='/healthlog/:id' element={<HealthLog/>}/>
+              <Route path='/profile' element={<Profile/>}/>
+              <Route path='/chat' element={<Chat/>}/>
+            </Routes> 
+          </div>
+        </div>
+      )}
+      {!isAuthenticated && (
+        <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path='/onboarding' element={<Onboarding/>}/>
+            {/* <Route path='/' element={<LandingPage/>}/> */}
+        </Routes>
+      )}
+    </div>
+  );
+}
+
+
+
+
+const App = () => {
+  return(
+    <Router>
+      <Navigate/>
+    </Router>
+  );
 }
 
 export default App
