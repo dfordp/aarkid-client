@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Auth from './pages/Auth';
 import Onboarding from './pages/Onboarding';
-import LandingPage from './pages/LandingPage';
+// import LandingPage from './pages/LandingPage';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/Topbar';
 import Plants from './pages/Plants';
@@ -12,11 +12,24 @@ import HealthLogs from './pages/HealthLogs';
 import HealthLog from './pages/HealthLog';
 import Profile from './pages/Profile';
 import Chat from './pages/Chat';
+import { useRecoilValue } from 'recoil';
+import { Authenticated } from './atom';
 
 
 const Navigate = () => {
 
-const [isAuthenticated, setisAuthenticated] = useState(true);
+const isAuthenticated  = useRecoilValue(Authenticated)
+
+const navigate = useNavigate();
+const location = useLocation();
+
+useEffect(()=>{
+  if(isAuthenticated){
+    if(location.pathname === "/"){
+      navigate('/plants');
+    }
+  }
+},[navigate,location,isAuthenticated]);
   
 
   return(

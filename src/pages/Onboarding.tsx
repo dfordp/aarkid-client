@@ -6,13 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-// import { useSetRecoilState } from 'recoil';
-// import { Authenticated } from '@/atom';
+import { useSetRecoilState } from 'recoil';
+import { Authenticated } from '@/atom';
 
 const Onboarding = () => {
 
   const navigate = useNavigate();
-  // const setAuthenticated = useSetRecoilState(Authenticated);
+  const setAuthenticated = useSetRecoilState(Authenticated);
 
   const email = localStorage.getItem("email");
   const [name, setName] = useState('');
@@ -62,7 +62,7 @@ const Onboarding = () => {
       localStorage.setItem("token",token);
       localStorage.setItem("_id",_id); 
       navigate('/plants')
-      // setAuthenticated(true);
+      setAuthenticated(true);
     }
     catch(e){
       console.log(e);   

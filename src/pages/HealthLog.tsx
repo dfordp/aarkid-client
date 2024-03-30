@@ -1,13 +1,75 @@
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+
 const HealthLog = () => {
+  const [log, setLog] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
+
+  useEffect(() => {
+    const fetchLog = async () => {
+      const parts = location.pathname.split("/");
+      const _id = parts[parts.length - 1];
+
+      const logData = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/healthlog/getHealthLog/${_id}`, {
+        headers: {
+          'Authorization': localStorage.getItem("token"),
+        },
+        withCredentials: true,
+      });
+
+      setLog(logData.data);
+      setIsLoading(false);
+    }
+
+    fetchLog();
+  }, []);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const date = new Date(log.dateOfDiagnosis);
+  const formattedDate = `${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}`;
+
   return (
     <div className="px-4 py-4 " style={{ maxHeight: '100vh', overflowY: 'auto' }}>
       <div className="flex flex-row justify-between">
         <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">
-          HealthLog
+          Health Log
         </h1>
+      </div>
+      <div className="pt-16 px-4 flex flex-row gap-4">
+        <div>
+          <img src={log.attachment} className="w-48 h-48 rounded-full"/>
+        </div>
+        <div className="font-semibold flex flex-col">
+          <div className="flex flex-row gap-10">
+            <label>
+              Log Name:
+              <Input disabled className="my-2 w-80" value={log.name} />
+            </label>
+            <label>
+              Date of Diagnosis:
+              <Input disabled className="my-2 w-80" value={formattedDate} />
+            </label>
+          </div>
+          <div className="flex flex-col gap-10">
+            <label>
+              Comment:
+              <Input disabled className="my-2 w-full" value={log.comment} />
+            </label>
+            <label>
+              Diagnosis By Model:
+              <textarea disabled className="my-2 w-full h-40" value={log.diagnosisByModel} />
+            </label>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-export default HealthLog
+export default HealthLog;

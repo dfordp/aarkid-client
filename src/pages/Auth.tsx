@@ -3,12 +3,12 @@ import { signInWithPopup} from "firebase/auth";
 import {googleProvider, auth} from "../helpers/firebase"
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
-// import { useSetRecoilState } from "recoil";
-// import { Authenticated } from "@/atom";
+import { useSetRecoilState } from "recoil";
+import { Authenticated } from "@/atom";
 
 const Auth = () => {
   const navigate = useNavigate();
-  // const setAutenticated = useSetRecoilState(Authenticated);
+  const setAutenticated = useSetRecoilState(Authenticated);
 
   interface UserData {
     email: string;
@@ -32,7 +32,7 @@ const Auth = () => {
         localStorage.setItem("_id",_id); 
         localStorage.setItem("email",email);
         navigate('/plants')
-        // setAutenticated(true);
+        setAutenticated(true);
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response && error.response.status === 404) {

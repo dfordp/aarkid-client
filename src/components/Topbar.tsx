@@ -3,34 +3,26 @@
 // import { useEffect, useState } from "react"
 // import axios from "axios"
 
+import { User } from "@/atom";
+import { useEffect, useState } from "react";
+import { useRecoilValue } from "recoil";
+
 const TopBar = () => {
 
-//   const [pic,setPic] = useState("");
+  const [pic,setPic] = useState("");
+  const user = useRecoilValue(User);
 
-//   useEffect(()=>{
-
-//     const addPic = async() => {
-
-//       const _id = localStorage.getItem("_id")
-//       const userData = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user/getUser/${_id}`,{
-//         headers :{
-//           'Authorization': localStorage.getItem("token"),
-//         },
-//         withCredentials:true,
-//       });
-//       setPic(userData.data.image)
-//     }
-
-//     addPic()
-//   } 
-//     ,[])
+  useEffect(()=>{
+    setPic(user.image)
+  }
+    ,[])
 
   return (
     <div className="bg-white w-[1418px] h-[80px] shadow-sm px-4">
      <div className="flex flex-row justify-end my-3 gap-4">
         {/* <ModeToggle/> */}
         <div>
-          <img src={"https://avatars.githubusercontent.com/u/92905896?v=4"} className="w-10 h-10 rounded-full"/>
+          <img src={pic} className="w-10 h-10 rounded-full"/>
         </div>
      </div>
     </div>

@@ -7,35 +7,69 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { FaCaretDown } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import axios from "axios"
+import HealthLogCard from "@/components/elements/HealthLogCard"
 
 const HealthLogs = () => {
 
   const [logType, setLogType] = useState(null);
-  const [newType, setNewType] = useState("");
 
   const [logName, setLogName] = useState("");
   const [relatedType, setRelatedType] = useState("");
   const [dateOfLog, setDateOfLog] = useState("");
   const [comment, setComment] = useState("");
   const [file, setFile] = useState(null);
+  const [healthLogBox,setHealthLogBox] = useState(false);
+  const [logResult,setLogResult] = useState("");
+  const [types,setTypes] = useState([]);
+  const [healthLogs,setHealthLogs]= useState([]); 
 
-  const types  = [ "type 1" , "type 2" , "type 3"]
+  useEffect(()=>{
 
-  const handleAddType = async () => {
-    const newLogType = [...types, newType];
-    console.log(newLogType)
-  };
-  
+    const fetchHealthLogs = async () => {
+      const _id = localStorage.getItem("_id");
+
+      const logs = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/healthLog/getHealthLogsByUserId/${_id}`,{
+        headers: {
+          'Authorization': localStorage.getItem("token"),
+        },
+        withCredentials: true
+      });
+      console.log("logs",logs.data);
+      
+      setHealthLogs(logs.data);
+    }
+
+
+    const fetchPlants =async () => {
+      const _id = localStorage.getItem("_id")
+
+      const plants = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/plant/getPlantsByUserId/${_id}`,{
+        headers: {
+          'Authorization': localStorage.getItem("token"),
+        },
+        withCredentials: true
+      });
+      console.log(plants.data);
+      const plantNames = plants.data.map(plant => ({_id: plant._id, name: plant.name}));
+      console.log(plantNames);
+      setTypes(plantNames)
+    }
+
+    fetchPlants();
+    fetchHealthLogs();
+  },[]);
+
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       setFile(event.target.files[0] as unknown as null);
@@ -46,13 +80,39 @@ const HealthLogs = () => {
     event.preventDefault();
     const data = {
       user_id : localStorage.getItem("_id"),
-      image : file,
-      type : relatedType,
-      dateOfLog : dateOfLog,
+      attachment : file,
+      plant_id : relatedType,
+      dateOfDiagnosis : dateOfLog,
       comment : comment,
       name : logName
     }
+    console.log(data);
+    
+    const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/healthlog/createNewHealthLog/`,data,{
+      headers: {
+        'Authorization': localStorage.getItem("token"),
+        'Content-Type': 'multipart/form-data'
+      },
+      withCredentials: true
+    });
+    console.log(res.data);
+    
+    setHealthLogBox(true);
+    setLogResult(res.data.diagnosisByModel)
   }  
+
+
+  const handleSaveClick = () => {
+    setLogName("");
+    setRelatedType("");
+    setDateOfLog("");
+    setFile(null);
+    setComment("");
+    setLogResult("");
+    setHealthLogBox(false);
+  }
+
+  
 
   return (
     <div className="px-4 py-4 " style={{ maxHeight: '100vh', overflowY: 'auto' }}>
@@ -66,25 +126,11 @@ const HealthLogs = () => {
           <DropdownMenuTrigger className="flex flex-row items-center gap-3 py-2"><FaCaretDown /> <div>{logType || "All Logs"}</div></DropdownMenuTrigger>
           <DropdownMenuContent>
           {types.map((type, index) => (
-                  <DropdownMenuItem key={index} onSelect={() => setLogType(type)}>
-                    {type}
+                  <DropdownMenuItem key={index} onSelect={() => setLogType(type.name)}>
+                    {type.name}
                   </DropdownMenuItem>
                 ))}
           <DropdownMenuItem onSelect={() => setLogType(null)}>All Logs</DropdownMenuItem>
-          <DropdownMenu >
-            <Dialog>
-                    <DialogTrigger>+Add Type</DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>
-                          Add a new Type
-                        </DialogTitle>
-                      </DialogHeader>
-                      <Input type="text" value={newType} onChange={(e) => setNewType(e.target.value)} />
-                      <Button onClick={handleAddType}>Submit</Button>
-                    </DialogContent>
-                  </Dialog>
-          </DropdownMenu>
           </DropdownMenuContent>
         </DropdownMenu>
         </div>
@@ -95,7 +141,7 @@ const HealthLogs = () => {
                   + Create Log
                 </Button>
               </DialogTrigger>
-              <DialogContent className="font-semibold">
+              <DialogContent className="font-semibold h-[60vh] overflow-auto">
                 <DialogHeader>
                   <DialogTitle className="text-3xl font-bold">Create Log</DialogTitle>
                 </DialogHeader>
@@ -111,8 +157,8 @@ const HealthLogs = () => {
                     <DropdownMenuTrigger className="flex flex-row items-center gap-3 py-2"><FaCaretDown /> <div>{relatedType || "Select Type"}</div></DropdownMenuTrigger>
                     <DropdownMenuContent>
                       {types.map((type, index) => (
-                        <DropdownMenuItem key={index} onSelect={() => setRelatedType(type)}>
-                          {type}
+                        <DropdownMenuItem key={index} onSelect={() => setRelatedType(type._id)}>
+                          {type.name}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -137,11 +183,39 @@ const HealthLogs = () => {
                 <Button onClick={handleSubmit}>
                   Submit
                 </Button>
+                {healthLogBox && (
+                  <div className="flex flex-col gap-6">
+                     <label>
+                      <h1 className="font-semibold">
+                        Log Result
+                      </h1>
+                      <div>
+                        <textarea disabled placeholder="Log Result" value={logResult} className="w-full h-40 mt-2"/>
+                      </div>
+                     </label>
+                     <Button onClick={handleSaveClick}>
+                        Save
+                     </Button>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </div>
         </div>
       </div>
+      <div className="mt-6 mx-8 grid grid-cols-3 gap-6 overflow-y-auto" style={{ maxHeight: '400px' }}>
+            {(healthLogs).map((healthLog, index: number) => (
+                <div key={index}>
+                  <HealthLogCard
+                  image={healthLog.attachment} 
+                  name={healthLog.name}
+                  _id = {healthLog._id}
+                  dateofDiagnosis = {healthLog.dateOfDiagnosis}
+                  comment = {healthLog.comment}
+                  />
+                </div>
+            ))}
+          </div>
     </div>
   )
 }
