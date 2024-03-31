@@ -1,51 +1,121 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SiTask } from "react-icons/si";
 import { PiPlant } from "react-icons/pi";
-import { CiCalendarDate } from "react-icons/ci";
-import { FaCheck, FaTrash } from "react-icons/fa";
+import { FaCaretDown, FaCheck, FaTrash } from "react-icons/fa";
+import axios from 'axios';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const Tasks = () => {
 
   const [taskName, setTaskName] = useState("");
   const [plantName, setPlantName] = useState("");
-  const [date, setDate] = useState("");
-  const [tasks, setTasks] = useState([
-    { id: 1, taskName: "Water the plants", plantName: "Rose", date: "2022-01-01" },
-    { id: 2, taskName: "Prune the plants", plantName: "Tulip", date: "2022-01-02" },
-    // Add more tasks as needed
-  ]);
+  const [plantId,setPlantId] = useState("");
+  const [tasks, setTasks] = useState([]);
+  const [plants ,setPlants] = useState([]);
 
-  const handleAddTask = () => {
+
+  useEffect(()=>{
+
+    const fetchTasks = async () => {
+      const _id = localStorage.getItem("_id");
+
+      const logs = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/task/getTasksByUserId/${_id}`,{
+        headers: {
+          'Authorization': localStorage.getItem("token"),
+        },
+        withCredentials: true
+      });
+      console.log("tasks",logs.data);
+      
+      const incompleteTasks = logs.data.filter(task => task.isCompleted === false);
+      setTasks(incompleteTasks);
+    }
+
+
+    const fetchPlants =async () => {
+      const _id = localStorage.getItem("_id")
+
+      const plants = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/plant/getPlantsByUserId/${_id}`,{
+        headers: {
+          'Authorization': localStorage.getItem("token"),
+        },
+        withCredentials: true
+      });
+      console.log(plants.data);
+      const plantNames = plants.data.map(plant => ({_id: plant._id, name: plant.name}));
+      console.log(plantNames);
+      setPlants(plantNames)
+    }
+
+    fetchPlants();
+    fetchTasks();
+  },[]);
+
+
+
+  const handleAddTask = async () => {
     // Create a new task object
-    const newTask = {
-      id: tasks.length + 1, // This is a simple way to generate a unique id
-      taskName: taskName,
-      plantName: plantName,
-      date: date
+    const data = {
+      user_id : localStorage.getItem("_id"),
+      name: taskName,
+      plant_name: plantName,
     };
-  
-    // Add the new task to the tasks state
-    setTasks([...tasks, newTask]);
-  
-    // Clear the input fields
+    
+
+    console.log(data);
+    
+
+    const newTask = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/task/createNewTask`,data,{
+      headers: {
+        'Authorization': localStorage.getItem("token"),
+      },
+      withCredentials: true
+    });
+
+    console.log(newTask.data);
+
+    setTasks(...tasks,newTask.data);
+    
     setTaskName("");
     setPlantName("");
-    setDate("");
   };
   
-  const handleCheck = (taskId) => {
-    // Map over the tasks and for each task, if the task id matches the checked task id, add a 'checked' property to it
-    const updatedTasks = tasks.map(task => task.id === taskId ? {...task, checked: !task.checked} : task);
+  const handleCheck = async (taskId) => {
+
+    const data = {
+      isCompleted : true
+    }
+
+    const newTask = await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/task/updateTask/${taskId}`,data,{
+      headers: {
+        'Authorization': localStorage.getItem("token"),
+      },
+      withCredentials: true
+    });
+
+    const updatedTasks = tasks.filter(task => task._id !== taskId);
   
-    // Update the tasks state
     setTasks(updatedTasks);
   };
   
-  const handleDelete = (taskId) => {
+  const handleDelete = async (taskId) => {
+
+    const newTask = await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/task/deleteTask/${taskId}`,{
+      headers: {
+        'Authorization': localStorage.getItem("token"),
+      },
+      withCredentials: true
+    });
+
     // Filter out the task with the matching id
-    const updatedTasks = tasks.filter(task => task.id !== taskId);
+    const updatedTasks = tasks.filter(task => task._id !== taskId);
   
     // Update the tasks state
     setTasks(updatedTasks);
@@ -66,11 +136,17 @@ const Tasks = () => {
           </div>
           <div className="flex flex-row gap-2 items-center">
             <PiPlant/>
-            <Input className="w-64" placeholder="Plant Name" value={plantName} onChange={(e) => setPlantName(e.target.value)} />
-          </div>
-          <div className="flex flex-row gap-2 items-center">
-            <CiCalendarDate/>
-            <Input type="date" className="w-64" value={date} onChange={(e) => setDate(e.target.value)} />
+            {/* <Input className="w-64" placeholder="Plant Name" value={plantName} onChange={(e) => setPlantName(e.target.value)} /> */}
+            <DropdownMenu>
+          <DropdownMenuTrigger className="flex flex-row items-center gap-3 py-2"><FaCaretDown /> <div>{plantName}</div></DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {plants.map((type, index) => (
+                    <DropdownMenuItem key={index} onSelect={() => {setPlantName(type.name); setPlantId(type._id)}}>
+                      {type.name}
+                    </DropdownMenuItem>
+                  ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           </div>
           <div>
             <Button onClick={handleAddTask}>Add Task</Button>
@@ -79,15 +155,14 @@ const Tasks = () => {
       </div>
       <div className="mt-4">
         {tasks.map((task) => (
-          <div key={task.id} className="flex justify-between items-center p-4 bg-slate-100 rounded-md shadow-md mb-4">
+          <div key={task._id} className="flex justify-between items-center p-4 bg-slate-100 rounded-md shadow-md mb-4">
             <div>
-              <h2 className="font-bold">{task.taskName}</h2>
-              <p>{task.plantName}</p>
-              <p>{task.date}</p>
+              <h2 className="font-bold">{task.name}</h2>
+              <p>{task.plant_name}</p>
             </div>
             <div className="flex gap-2">
-              <FaCheck onClick={() => handleCheck(task.id)} />
-              <FaTrash onClick={() => handleDelete(task.id)} />
+              <FaCheck onClick={() => handleCheck(task._id)} />
+              <FaTrash onClick={() => handleDelete(task._id)} />
             </div>
           </div>
         ))}

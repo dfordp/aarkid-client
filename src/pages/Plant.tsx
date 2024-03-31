@@ -2,16 +2,20 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import HealthLogCard from "@/components/elements/HealthLogCard";
 
 const Plant = () => {
   const [plant, setPlant] = useState(null);
   const [isLoading, setIsLoading] = useState(true); // Add this line
   const location = useLocation();
+  const [logs,setLogs] = useState([]);
 
   useEffect(() => {
+
+    const parts = location.pathname.split("/");
+    const _id = parts[parts.length - 1];
+
     const fetchPlant = async () => {
-      const parts = location.pathname.split("/");
-      const _id = parts[parts.length - 1];
 
       const plantdata = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/plant/getPlant/${_id}`, {
         headers: {
@@ -24,6 +28,20 @@ const Plant = () => {
       setIsLoading(false); // Add this line
     }
 
+    const fetchLogs = async () => {
+
+      const logs = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/healthlog/getHealthLogsByPlantId/${_id}`,{
+        headers: {
+          'Authorization': localStorage.getItem("token"),
+        },
+        withCredentials: true
+      });
+      console.log("logs",logs.data);
+      
+      setLogs(logs.data);
+    }
+    
+    fetchLogs();
     fetchPlant();
   }, []);
 
@@ -73,6 +91,19 @@ const Plant = () => {
           HealthLogs
         </h1>
       </div>
+      <div className="mt-6 mx-8 grid grid-cols-3 gap-6 overflow-y-auto" style={{ maxHeight: '400px' }}>
+            {(logs).map((healthLog, index: number) => (
+                <div key={index}>
+                  <HealthLogCard
+                  image={healthLog.attachment} 
+                  name={healthLog.name}
+                  _id = {healthLog._id}
+                  dateofDiagnosis = {healthLog.dateOfDiagnosis}
+                  comment = {healthLog.comment}
+                  />
+                </div>
+            ))}
+          </div>
     </div>
   )
 }

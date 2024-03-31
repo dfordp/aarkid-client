@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useRecoilValue } from "recoil";
 import { User } from "@/atom";
 import axios from "axios";
+import ReactMarkdown from 'react-markdown';
 
 const Chat = () => {
   const [message, setMessage] = useState("")
@@ -104,7 +105,7 @@ const Chat = () => {
               <div key={index} className="chat-message flex flex-col items-start">
                 <img className="h-7 w-7 rounded-full mb-2" src={BotPic} alt="Other user" />
                 <div className="self-start bg-gray-300 p-2 rounded-md mx-4 w-80">
-                  <textarea value={message.message_content} className="w-full h-[100vh]"/>
+                  <ReactMarkdown>{message.message_content}</ReactMarkdown>
                 <div className="text-xs text-gray-600">{new Date(message.createdAt).toLocaleTimeString()}</div>
                 </div>
               </div>

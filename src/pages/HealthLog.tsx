@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import ReactMarkdown from 'react-markdown';
 
 const HealthLog = () => {
   const [log, setLog] = useState(null);
@@ -41,11 +42,11 @@ const HealthLog = () => {
           Health Log
         </h1>
       </div>
-      <div className="pt-16 px-4 flex flex-row gap-4">
-        <div>
-          <img src={log.attachment} className="w-48 h-48 rounded-full"/>
+      <div className="pt-16 px-4 flex flex-col gap-4">
+        <div className="flex flex-row justify-center">
+          <img src={log.attachment} className="w-80 rounded-md"/>
         </div>
-        <div className="font-semibold flex flex-col">
+        <div className="font-semibold flex flex-col pl-20">
           <div className="flex flex-row gap-10">
             <label>
               Log Name:
@@ -57,13 +58,13 @@ const HealthLog = () => {
             </label>
           </div>
           <div className="flex flex-col gap-10">
-            <label>
+            <label className="flex flex-col">
               Comment:
-              <Input disabled className="my-2 w-full" value={log.comment} />
+              <textarea disabled className="my-2 w-80" value={log.comment} />
             </label>
             <label>
               Diagnosis By Model:
-              <textarea disabled className="my-2 w-full h-40" value={log.diagnosisByModel} />
+              <ReactMarkdown>{log.diagnosisByModel}</ReactMarkdown>
             </label>
           </div>
         </div>
