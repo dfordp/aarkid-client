@@ -1,21 +1,21 @@
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-// import { ModeToggle } from "./mode-toggle" 
-// import { useEffect, useState } from "react"
-// import axios from "axios"
-
-import { User } from "@/atom";
+import { User as UserAtom } from "@/atom";
 import { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
+
+// Define an interface for the user object
+interface User {
+  image: string;
+  // Add other properties of the user object here
+}
 
 const TopBar = () => {
 
   const [pic,setPic] = useState("");
-  const user = useRecoilValue(User);
+  const user = useRecoilValue(UserAtom) as User; // Cast the user object to the User interface
 
   useEffect(()=>{
     setPic(user.image)
-  }
-    ,[])
+  },[])
 
   return (
     <div className="bg-white w-[1418px] h-[80px] shadow-sm px-4">

@@ -3,9 +3,14 @@ import { MdOutlineMedicalServices } from "react-icons/md";
 import { FiMessageSquare } from "react-icons/fi";
 import { BsListTask } from "react-icons/bs";
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSetRecoilState } from 'recoil';
+import { Authenticated } from '@/atom';
 
 const Sidebar = () => {
+
+  const navigate = useNavigate();
+  const setAuthenticated = useSetRecoilState(Authenticated);
   
   const menuItems = [
     { name: 'Plants', icon: IoLeafOutline   , path: '/plants' },
@@ -19,7 +24,8 @@ const Sidebar = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("_id");
-    window.location.reload();
+    setAuthenticated(false);
+    navigate('/auth')
   }
 
   return (

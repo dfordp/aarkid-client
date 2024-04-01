@@ -5,7 +5,18 @@ export const Authenticated = atom({
     default: false  
 }); 
 
-export const User = atom({
+export interface UserI {
+  createdAt: string;
+  email: string;
+  image: string;
+  name: string;
+  plantSpecies: string[];
+  updatedAt: string;
+  __v: number;
+  _id: string;
+}
+
+export const User = atom<UserI | null>({
     key : "User",
-    default : {}
-})
+    default : null
+});

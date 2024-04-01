@@ -1,17 +1,27 @@
-import { useEffect, useState } from "react";
-import { IoIosSend, IoIosImage } from "react-icons/io";
+import { useEffect, useRef, useState } from "react";
+import { IoIosSend } from "react-icons/io";
 import BotPic from "../assets/chatbotpic.jpg"
 import { Input } from "@/components/ui/input";
 import { useRecoilValue } from "recoil";
-import { User } from "@/atom";
+import { User as UserAtom } from "@/atom";
 import axios from "axios";
 import ReactMarkdown from 'react-markdown';
 
+interface Message {
+  user_id: string | null;
+  sent_By: string;
+  message_content: string;
+  createdAt: string;
+}
+
+interface User {
+  image: string;
+}
+
 const Chat = () => {
   const [message, setMessage] = useState("")
-  const [file,setfile] = useState(null);
-  const [messages,setMessages] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [messages,setMessages] = useState<Message[]>([]);
+  const bottomChatRef = useRef<HTMLDivElement>(null);
 
   useEffect(()=>{
     const _id = localStorage.getItem("_id");
@@ -24,29 +34,18 @@ const Chat = () => {
         withCredentials: true
       });
       console.log("messages",messages.data);
-      
-      const filteredMessages = messages.data.filter(message => {
-        const messageDate = new Date(message.createdAt);
-        return messageDate.getFullYear() === selectedDate.getFullYear() &&
-          messageDate.getMonth() === selectedDate.getMonth() &&
-          messageDate.getDate() === selectedDate.getDate();
-      });
 
-      filteredMessages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-
-      setMessages(filteredMessages);
+      setMessages(messages.data);
     }
 
     fetchMessages();
-  },[selectedDate]);
+  },[]);
 
-  const user = useRecoilValue(User);
+  useEffect(() => {
+    bottomChatRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setfile(event.target.files[0]);
-    }
-  };
+  const user = useRecoilValue(UserAtom) as User;
 
   const handleSubmit = async () => {
     const data = {
@@ -72,11 +71,11 @@ const Chat = () => {
       withCredentials: true
     });
     console.log(res.data);
-    setMessages([...messages,ndata,res.data])
+    setMessages([...messages,ndata,res.data as Message])
   }
 
   // Group messages by date
-  const messagesByDate = messages.reduce((groups, message) => {
+  const messagesByDate = messages.reduce((groups: {[key: string]: Message[]}, message) => {
     const date = new Date(message.createdAt).toLocaleDateString();
     if (!groups[date]) {
       groups[date] = [];
@@ -87,7 +86,7 @@ const Chat = () => {
 
   return (
     <div className="flex flex-col h-[100vh] overflow-auto bg-gray-200 p-4">
-      {Object.entries(messagesByDate).map(([date, messages]) => (
+      {Object.entries(messagesByDate).map(([date, messages]: [string, Message[]]) => (
         <div key={date}>
           <div className="flex justify-center">
             <div className="bg-gray-300 rounded-md text-xs text-gray-600 py-1 px-2">{date}</div>
@@ -112,12 +111,8 @@ const Chat = () => {
           ))}
         </div>
       ))}
-      <div className="mt-4 flex-none">
+      <div ref={bottomChatRef} className="mt-4 flex-none">
         <div className="border-t-2 border-gray-300 pt-4 flex items-center">
-          <div className="input-icon-container">
-              <Input type="file"  className="w-10 p-2 rounded-lg bg-white shadow hover:bg-gray-200"  onChange={handleFileChange} />
-              <IoIosImage size={24} className="input-icon" />
-          </div>
           <Input 
             className="ml-2 flex-grow border-2 rounded-lg p-2" 
             type="text" 

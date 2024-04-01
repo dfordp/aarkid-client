@@ -19,9 +19,23 @@ import { Input } from "@/components/ui/input"
 import axios from "axios"
 import HealthLogCard from "@/components/elements/HealthLogCard"
 
+interface Plant {
+  _id: string;
+  name: string;
+}
+
+interface HealthLog {
+  _id: string;
+  name: string;
+  attachment: string;
+  dateOfDiagnosis: string;
+  comment: string;
+  plant_id: string;
+}
+
 const HealthLogs = () => {
 
-  const [logType, setLogType] = useState(null);
+  const [logType, setLogType] = useState<string | null>(null);
 
   const [logName, setLogName] = useState("");
   const [relatedType, setRelatedType] = useState("");
@@ -30,8 +44,9 @@ const HealthLogs = () => {
   const [file, setFile] = useState(null);
   const [healthLogBox,setHealthLogBox] = useState(false);
   const [logResult,setLogResult] = useState("");
-  const [types,setTypes] = useState([]);
-  const [healthLogs,setHealthLogs]= useState([]); 
+  const [types,setTypes] = useState<Plant[]>([]);
+  const [healthLogs,setHealthLogs]= useState<HealthLog[]>([]); 
+  const [logTypeId,setLogypeId] = useState("");
 
   useEffect(()=>{
 
@@ -60,7 +75,7 @@ const HealthLogs = () => {
         withCredentials: true
       });
       console.log(plants.data);
-      const plantNames = plants.data.map(plant => ({_id: plant._id, name: plant.name}));
+      const plantNames = plants.data.map((plant: Plant) => ({_id: plant._id, name: plant.name}));
       console.log(plantNames);
       setTypes(plantNames)
     }
@@ -68,6 +83,8 @@ const HealthLogs = () => {
     fetchPlants();
     fetchHealthLogs();
   },[]);
+
+  const filteredLogs = logType ? healthLogs.filter((log: HealthLog) => log.plant_id === logTypeId) : healthLogs;
 
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,8 +142,8 @@ const HealthLogs = () => {
           <DropdownMenu>
           <DropdownMenuTrigger className="flex flex-row items-center gap-3 py-2"><FaCaretDown /> <div>{logType || "All Logs"}</div></DropdownMenuTrigger>
           <DropdownMenuContent>
-          {types.map((type, index) => (
-                  <DropdownMenuItem key={index} onSelect={() => setLogType(type.name)}>
+          {types.map((type: Plant, index) => (
+                  <DropdownMenuItem key={index} onSelect={() =>{ setLogType(type.name); setLogypeId(type._id)}}>
                     {type.name}
                   </DropdownMenuItem>
                 ))}
@@ -156,7 +173,7 @@ const HealthLogs = () => {
                   <DropdownMenu>
                     <DropdownMenuTrigger className="flex flex-row items-center gap-3 py-2"><FaCaretDown /> <div>{relatedType || "Select Type"}</div></DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      {types.map((type, index) => (
+                      {types.map((type: Plant, index) => (
                         <DropdownMenuItem key={index} onSelect={() => setRelatedType(type._id)}>
                           {type.name}
                         </DropdownMenuItem>
@@ -204,7 +221,7 @@ const HealthLogs = () => {
         </div>
       </div>
       <div className="mt-6 mx-8 grid grid-cols-3 gap-6 overflow-y-auto" style={{ maxHeight: '400px' }}>
-            {(healthLogs).map((healthLog, index: number) => (
+            {(filteredLogs).map((healthLog: HealthLog, index: number) => (
                 <div key={index}>
                   <HealthLogCard
                   image={healthLog.attachment} 

@@ -2,7 +2,16 @@ import { useNavigate } from "react-router-dom"
 import { FaLeaf } from 'react-icons/fa';
 import { IoIosCalendar } from 'react-icons/io';
 
-const PlantCard = ({plantName,plantimage,species,plantDop,plantcomment,plantId}) => {
+interface PlantCardProps {
+  plantName: string;
+  plantimage: string;
+  species: string;
+  plantDop: string;
+  plantcomment: string;
+  plantId: string;
+}
+
+const PlantCard: React.FC<PlantCardProps> = ({plantName, plantimage, species, plantDop, plantcomment, plantId}) => {
 
     const navigate = useNavigate()
 
@@ -36,4 +45,4 @@ const PlantCard = ({plantName,plantimage,species,plantDop,plantcomment,plantId})
   )
 }
 
-export default PlantCard
+export default PlantCard;

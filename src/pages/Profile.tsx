@@ -1,16 +1,17 @@
-import { User } from "@/atom";
+import { User , UserI } from "@/atom";
 import { Input } from "@/components/ui/input";
 import { useRecoilValue } from "recoil";
 
-
 const Profile = () => {
+  const user = useRecoilValue<UserI | null>(User);
 
-  const user = useRecoilValue(User)
-  console.log(user);
-  
+  if (!user) {
+    return <div>Loading...</div>;
+  }
+
   const date = new Date(user.createdAt);
   const formattedDate = `${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}`;
- 
+
   return (
     <div className="px-4 py-4 " style={{ maxHeight: '100vh', overflowY: 'auto' }}>
       <div>
@@ -40,7 +41,7 @@ const Profile = () => {
                   </label>
                   <label>
                     User Plants:
-                    <Input disabled  className="my-2 w-80" value={user.plantSpecies} />
+                    <Input disabled  className="my-2 w-80" value={user.plantSpecies.join(', ')} />
                   </label>
              </div>
         </div>

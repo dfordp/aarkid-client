@@ -18,27 +18,33 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import axios from "axios"
 import { useRecoilValue } from "recoil"
-import { User } from "@/atom"
+import { User,UserI } from "@/atom"
 import PlantCard from "@/components/elements/PlantCard"
 import { FaSpinner } from 'react-icons/fa';
 
 
+interface Plant {
+  species: string;
+  name: string;
+  image: string;
+  dateOfPlanting: string;
+  comment: string;
+  _id: string;
+}
+
 const Plants = () => {
-
-
-  const [plantSpecies,setPlantSpecies] = useState(null);
+  const [plantSpecies,setPlantSpecies] = useState<string | null>(null);
   const [newSpecies, setNewSpecies] = useState("");
-  const [plants,setPlants] = useState([]);
+  const [plants,setPlants] = useState<Plant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
 
   const [plantName, setplantName] = useState("");
   const [relatedSpecies, setRelatedSpecies] = useState("");
   const [dateOfPlantation, setDateOfPlantation] = useState("");
   const [comment, setcomment] = useState("");
-  const [file, setFile] = useState(null);
-  const [species , setSpecies] = useState([]);
-  const user = useRecoilValue(User);
+  const [file, setFile] = useState<File | null>(null);
+  const [species , setSpecies] = useState<string[]>([]);
+  const user = useRecoilValue<UserI | null>(User);
 
   useEffect(()=>{
     setIsLoading(true);
@@ -67,10 +73,9 @@ const Plants = () => {
 
   },[user])
 
-  
+  const filteredPlants = plantSpecies ? plants.filter(plant => plant.species === plantSpecies) : plants;
 
   const handleAddSpecies = async () => {
-
     const newplantSpecies = [...species,newSpecies];
     console.log(newplantSpecies)
 
@@ -86,17 +91,14 @@ const Plants = () => {
     console.log(res.data);
     setSpecies(newplantSpecies);
   };
-  
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       setFile(event.target.files[0] as unknown as null);
     }
   };
 
-
   const handleSubmit = async (event: React.FormEvent) => {
-
-
     event.preventDefault();
     const token = localStorage.getItem("token")
     const data = {
@@ -124,8 +126,7 @@ const Plants = () => {
       setDateOfPlantation("");
       setcomment("");
       setFile(null);
-  }  
-
+  }
 
   return (
     <div className="px-4 py-4 " style={{ maxHeight: '100vh', overflowY: 'auto' }}>
@@ -178,12 +179,12 @@ const Plants = () => {
                     <DialogHeader>
                       <DialogTitle className="text-3xl font-bold">Create Plant</DialogTitle>
                     </DialogHeader>
-  
+
                     <label>
                       Plant Name:
                       <Input value={plantName} onChange={e => setplantName(e.target.value)} />
                     </label>
-  
+
                     <label>
                       Species:
                       <DropdownMenu>
@@ -197,22 +198,22 @@ const Plants = () => {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </label>
-  
+
                     <label>
                       Date of Plantation:
                       <Input type="date" value={dateOfPlantation} onChange={e => setDateOfPlantation(e.target.value)} />
                     </label>
-  
+
                     <label>
                       Comments (if any):
                       <Input className="my-2" value={comment} onChange={e => setcomment(e.target.value)} />
                     </label>
-  
+
                     <label>
                       Image:
                       <Input type="file" className='w-full my-2' onChange={handleFileChange} />
                     </label>
-  
+
                     <Button onClick={handleSubmit}>
                       Submit
                     </Button>
@@ -222,7 +223,7 @@ const Plants = () => {
             </div>
           </div>
           <div className="mt-6 mx-8 grid grid-cols-3 gap-6 overflow-y-auto" style={{ maxHeight: '400px' }}>
-            {plants.map((plant,index)=>(
+            {filteredPlants.map((plant,index)=>(
               <PlantCard key={index}
                 plantName = {plant.name}
                 plantimage = {plant.image}

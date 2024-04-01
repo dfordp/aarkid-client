@@ -1,7 +1,16 @@
 import { useNavigate } from "react-router-dom"
 import { IoIosCalendar } from 'react-icons/io';
 
-const HealthLogCard = ({image,name,_id,dateofDiagnosis,comment}) => {
+// Define an interface for the props
+interface HealthLogCardProps {
+  image: string;
+  name: string;
+  _id: string;
+  dateofDiagnosis: string;
+  comment: string;
+}
+
+const HealthLogCard: React.FC<HealthLogCardProps> = ({image, name, _id, dateofDiagnosis, comment}) => {
 
     const navigate = useNavigate()
     const date = new Date(dateofDiagnosis);
@@ -30,4 +39,4 @@ const HealthLogCard = ({image,name,_id,dateofDiagnosis,comment}) => {
   )
 }
 
-export default HealthLogCard
+export default HealthLogCard;

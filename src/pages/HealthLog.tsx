@@ -4,8 +4,16 @@ import { useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import ReactMarkdown from 'react-markdown';
 
+interface Log {
+  dateOfDiagnosis: string;
+  attachment: string;
+  name: string;
+  comment: string;
+  diagnosisByModel: string;
+}
+
 const HealthLog = () => {
-  const [log, setLog] = useState(null);
+  const [log, setLog] = useState<Log | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
 
@@ -32,8 +40,12 @@ const HealthLog = () => {
     return <div>Loading...</div>;
   }
 
-  const date = new Date(log.dateOfDiagnosis);
-  const formattedDate = `${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}`;
+  let formattedDate = '';
+  if (log && log.dateOfDiagnosis) {
+    const date = new Date(log.dateOfDiagnosis);
+    formattedDate = `${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}`;
+  }
+
 
   return (
     <div className="px-4 py-4 " style={{ maxHeight: '100vh', overflowY: 'auto' }}>
@@ -44,13 +56,13 @@ const HealthLog = () => {
       </div>
       <div className="pt-16 px-4 flex flex-col gap-4">
         <div className="flex flex-row justify-center">
-          <img src={log.attachment} className="w-80 rounded-md"/>
+          <img src={log?.attachment} className="w-80 rounded-md"/>
         </div>
         <div className="font-semibold flex flex-col pl-20">
           <div className="flex flex-row gap-10">
             <label>
               Log Name:
-              <Input disabled className="my-2 w-80" value={log.name} />
+              <Input disabled className="my-2 w-80" value={log?.name} />
             </label>
             <label>
               Date of Diagnosis:
@@ -60,11 +72,11 @@ const HealthLog = () => {
           <div className="flex flex-col gap-10">
             <label className="flex flex-col">
               Comment:
-              <textarea disabled className="my-2 w-80" value={log.comment} />
+              <textarea disabled className="my-2 w-80" value={log?.comment} />
             </label>
             <label>
               Diagnosis By Model:
-              <ReactMarkdown>{log.diagnosisByModel}</ReactMarkdown>
+              <ReactMarkdown>{log?.diagnosisByModel}</ReactMarkdown>
             </label>
           </div>
         </div>
