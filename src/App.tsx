@@ -24,7 +24,12 @@ const navigate = useNavigate();
 const location = useLocation();
 
 useEffect(()=>{
-  if(isAuthenticated){
+  if(!isAuthenticated){
+    if(location.pathname === "/"){
+      navigate('/auth');
+    }
+  }
+  else{
     if(location.pathname === "/"){
       navigate('/plants');
     }
