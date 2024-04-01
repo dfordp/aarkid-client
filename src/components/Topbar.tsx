@@ -1,21 +1,16 @@
-import { User } from "@/atom";
+import { User ,UserI } from "@/atom";
 import {  useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
 
-// Define an interface for the user object
-interface User {
-  image: string;
-  // Add other properties of the user object here
-}
-
 const TopBar = () => {
-
   const [pic,setPic] = useState("");
-  const user = useRecoilValue(User)
-  useEffect(()=>{
-    setPic(user?.image)
-  },[])
+  const user = useRecoilValue<UserI | null>(User);
 
+  useEffect(()=>{
+    if (user) {
+      setPic(user.image);
+    }
+  },[user])
 
   return (
     <div className="bg-white w-[1418px] h-[80px] shadow-sm px-4">
