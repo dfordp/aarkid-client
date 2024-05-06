@@ -84,23 +84,6 @@ const Tasks = () => {
     setPlantName("");
   };
   
-  const handleCheck = async (taskId: string) => {
-
-    const data = {
-      isCompleted : true
-    }
-
-    await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/task/updateTask/${taskId}`,data,{
-      headers: {
-        'Authorization': localStorage.getItem("token"),
-      },
-      withCredentials: true
-    });
-
-    const updatedTasks = tasks.filter(task => task._id !== taskId);
-  
-    setTasks(updatedTasks);
-  };
   
   const handleDelete = async (taskId: string) => {
 
@@ -155,8 +138,7 @@ const Tasks = () => {
               <p>{task.plant_name}</p>
             </div>
             <div className="flex gap-2">
-              <FaCheck onClick={() => handleCheck(task._id)} />
-              <FaTrash onClick={() => handleDelete(task._id)} />
+              <FaCheck onClick={() => handleDelete(task._id)} />
             </div>
           </div>
         ))}
