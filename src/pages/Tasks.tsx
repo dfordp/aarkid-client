@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { SiTask } from "react-icons/si";
 import { PiPlant } from "react-icons/pi";
-import { FaCaretDown, FaCheck, FaTrash } from "react-icons/fa";
+import { FaCaretDown, FaCheck } from "react-icons/fa";
 import axios from 'axios';
 import {
   DropdownMenu,
