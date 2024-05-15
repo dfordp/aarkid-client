@@ -4,11 +4,12 @@ import {googleProvider, auth} from "../helpers/firebase"
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import { useSetRecoilState } from "recoil";
-import { Authenticated } from "@/atom";
+import { Authenticated, User } from "@/atom";
 
 const Auth = () => {
   const navigate = useNavigate();
   const setAutenticated = useSetRecoilState(Authenticated);
+  const setUser = useSetRecoilState(User);
 
   interface UserData {
     email: string;
@@ -33,6 +34,7 @@ const Auth = () => {
         localStorage.setItem("email",email);
         navigate('/plants')
         setAutenticated(true);
+        setUser(checkUser.data);
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response && error.response.status === 404) {
