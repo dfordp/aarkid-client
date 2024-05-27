@@ -1,30 +1,51 @@
-# React + TypeScript + Vite
+# Aarchid - Individual Level Flora Monitoring System 
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This application helps individuals by providing plant care assistance using Google's Gemini Pro models for vision and text analysis.
 
-Currently, two official plugins are available:
+## Functionalities
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Plant-Specific Task Management
+- Lifecycle Tracking
+- In-App Health Monitoring
+- AI-Powered Chat Support
 
-## Expanding the ESLint configuration
+## Technologies Used
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- React.js
+- Tailwind CSS
+- ShadCN UI
+- Firebase
 
-- Configure the top-level `parserOptions` property like this:
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+
+## How to Get Started
+
+- Clone the repository 
+
+```
+git clone https://github.com/dfordp/aarkid-client.git
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+- Install all the required dependencies
+
+```
+npm i 
+```
+
+
+
+- Get Enviroment Variables
+
+.env.example
+```
+VITE_API_KEY = 
+VITE_AUTH_DOMAIN = 
+VITE_PROJECT_ID = 
+VITE_STORAGE_BUCKET = 
+VITE_MESSAGING_SENDER_ID = 
+VITE_APP_ID =
+VITE_MEASUREMENT_ID =
+VITE_BACKEND_URL = 
+```
+
+- Create a Pull Request To Start Contributing 
