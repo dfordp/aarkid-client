@@ -2,6 +2,8 @@
 
 This application helps individuals by providing plant care assistance using Google's Gemini Pro models for vision and text analysis.
 
+Server Side Code : https://github.com/dfordp/aarkid-api
+
 ## Functionalities
 
 - Plant-Specific Task Management
