@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import toast from 'react-hot-toast';
 
 interface Task {
   _id: string;
@@ -82,6 +83,7 @@ const Tasks = () => {
     
     setTaskName("");
     setPlantName("");
+    toast.success("Task Added Successfully");
   };
   
   

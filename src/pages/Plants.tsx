@@ -21,6 +21,7 @@ import { useRecoilValue } from "recoil"
 import { User,UserI } from "@/atom"
 import PlantCard from "@/components/elements/PlantCard"
 import { FaSpinner } from 'react-icons/fa';
+import toast from "react-hot-toast"
 
 
 interface Plant {
@@ -88,6 +89,8 @@ const Plants = () => {
       withCredentials: true
     });
 
+    toast.success("New species added successfully")
+
     console.log(res.data);
     setSpecies(newplantSpecies);
   };
@@ -120,7 +123,7 @@ const Plants = () => {
         withCredentials: true
       });
       console.log(res);
-
+      toast.success("New Plant Added Successfully")
       setplantName("");
       setRelatedSpecies("");
       setDateOfPlantation("");

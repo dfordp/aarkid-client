@@ -5,6 +5,7 @@ import axios from "axios";
 import { useNavigate } from 'react-router-dom';
 import { useSetRecoilState } from "recoil";
 import { Authenticated, User } from "@/atom";
+import toast from "react-hot-toast";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -35,6 +36,8 @@ const Auth = () => {
         navigate('/plants')
         setAutenticated(true);
         setUser(checkUser.data);
+        toast.success("Authentication Successful!")
+        window.location.reload();
       }
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response && error.response.status === 404) {
@@ -43,6 +46,7 @@ const Auth = () => {
       } else {
         // Handle other errors here
         console.error(error);
+        toast.error(`${error}`);
       }
     }
   }

@@ -13,7 +13,7 @@ const TopBar = () => {
   },[user])
 
   return (
-    <div className="bg-white w-[1418px] h-[80px] shadow-sm px-4">
+    <div className="bg-white  lg:w-[1420px] h-16 shadow-sm px-4">
      <div className="flex flex-row justify-end my-3 gap-4">
         {/* <ModeToggle/> */}
         <div>

@@ -40,7 +40,7 @@ useEffect(()=>{
   return(
     <div>
       {isAuthenticated && (
-        <div className="flex flex-row bg-gray-200 w-screen h-screen">
+        <div className="flex flex-row bg-gray-200 min-w-screen h-screen">
           <div className="z-10">
             <Sidebar/>
           </div>

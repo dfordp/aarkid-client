@@ -6,6 +6,7 @@ import { BsListTask } from "react-icons/bs";
 import { Link, useNavigate } from 'react-router-dom';
 import { useSetRecoilState } from 'recoil';
 import { Authenticated } from '@/atom';
+import toast from 'react-hot-toast';
 
 const Sidebar = () => {
 
@@ -26,6 +27,7 @@ const Sidebar = () => {
     localStorage.removeItem("_id");
     setAuthenticated(false);
     navigate('/auth')
+    toast.success("Logged Out SuccesFully");
   }
 
   return (
