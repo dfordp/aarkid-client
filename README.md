@@ -50,4 +50,4 @@ VITE_MEASUREMENT_ID =
 VITE_BACKEND_URL = 
 ```
 
-- Create a Pull Request To Start Contributing 
+- Create a Pull Request To Start Contributing.
