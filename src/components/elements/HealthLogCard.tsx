@@ -1,42 +1,70 @@
 import { useNavigate } from "react-router-dom"
-import { IoIosCalendar } from 'react-icons/io';
+import { IoIosCalendar } from "react-icons/io"
 
-// Define an interface for the props
 interface HealthLogCardProps {
-  image: string;
-  name: string;
-  _id: string;
-  dateofDiagnosis: string;
-  comment: string;
+  image: string
+  name: string
+  _id: string
+  dateofDiagnosis: string
+  comment: string
 }
 
-const HealthLogCard: React.FC<HealthLogCardProps> = ({image, name, _id, dateofDiagnosis, comment}) => {
-
-    const navigate = useNavigate()
-    const date = new Date(dateofDiagnosis);
-    const formattedDate = `${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}`;
+const HealthLogCard: React.FC<HealthLogCardProps> = ({
+  image,
+  name,
+  _id,
+  dateofDiagnosis,
+  comment,
+}) => {
+  const navigate = useNavigate()
+  const date = new Date(dateofDiagnosis)
+  const formattedDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`
 
   return (
-    <div onClick={()=>navigate(`/healthlog/${_id}`)}  className="bg-gray-300 w-72 h-40 shadow-md rounded-md">
-      <div className="bg-gray-100 h-20 rounded-t">
-             <img src={image} className='w-full h-20 object-cover rounded-t-md'></img>
-         </div>
-         <div className="bg-gray-300 h-20 flex flex-col justify-between px-1 py-1">
-            <div className="font-bold text-xl">
-                {name}
-            </div>
-            <div className="flex flex-row justify-between font-medium text-sm">
-            <div className="flex items-center gap-2">
-                <IoIosCalendar opacity={.5}/>
-                <div>{formattedDate}</div>
-            </div>
-            </div>
-            <div className="text-xs">
-                {comment.length > 50 ? `${comment.substring(0, 50)}...` : comment}
-            </div>
-         </div>
+    <div
+      onClick={() => navigate(`/healthlog/${_id}`)}
+      className="
+        group relative cursor-pointer rounded-xl overflow-hidden
+        border border-gray-100 bg-white shadow-sm 
+        hover:shadow-md hover:border-green-200 hover:translate-y-[-2px]
+        transition-all duration-300 ease-in-out
+        w-full max-w-sm
+      "
+    >
+      {/* Thumbnail */}
+      <div className="h-36 w-full overflow-hidden bg-gray-50">
+        <img
+          src={image}
+          alt={name}
+          className="h-36 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+      </div>
+
+      {/* Content */}
+      <div className="p-4 space-y-2">
+        {/* Title */}
+        <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">
+          {name}
+        </h3>
+
+        {/* Diagnosis Date */}
+        <div className="flex items-center gap-1.5 text-gray-600 text-sm">
+          <IoIosCalendar className="text-green-600 opacity-80" size={16} />
+          <span>{formattedDate}</span>
+        </div>
+
+        {/* Comment */}
+        {comment && (
+          <p className="text-xs text-gray-500 italic line-clamp-2">
+            “{comment.length > 80 ? `${comment.slice(0, 80)}...` : comment}”
+          </p>
+        )}
+      </div>
+
+      {/* Subtle accent bar */}
+      <div className="absolute left-0 bottom-0 w-full h-1 bg-green-500/60 group-hover:bg-green-600 transition-all" />
     </div>
   )
 }
 
-export default HealthLogCard;
+export default HealthLogCard

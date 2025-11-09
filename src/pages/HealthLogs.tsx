@@ -11,231 +11,270 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-
 import { useEffect, useState } from "react"
-import { FaCaretDown } from "react-icons/fa"
+import { FaCaretDown, FaSpinner } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import axios from "axios"
 import HealthLogCard from "@/components/elements/HealthLogCard"
 import toast from "react-hot-toast"
+import { motion } from "framer-motion"
 
 interface Plant {
-  _id: string;
-  name: string;
+  _id: string
+  name: string
 }
 
 interface HealthLog {
-  _id: string;
-  name: string;
-  attachment: string;
-  dateOfDiagnosis: string;
-  comment: string;
-  plant_id: string;
+  _id: string
+  name: string
+  attachment: string
+  dateOfDiagnosis: string
+  comment: string
+  plant_id: string
 }
 
 const HealthLogs = () => {
+  const [logType, setLogType] = useState<string | null>(null)
+  const [logTypeId, setLogTypeId] = useState("")
+  const [types, setTypes] = useState<Plant[]>([])
+  const [healthLogs, setHealthLogs] = useState<HealthLog[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  const [logType, setLogType] = useState<string | null>(null);
+  // Create Log States
+  const [logName, setLogName] = useState("")
+  const [relatedType, setRelatedType] = useState("")
+  const [dateOfLog, setDateOfLog] = useState("")
+  const [comment, setComment] = useState("")
+  const [file, setFile] = useState<File | null>(null)
+  const [logResult, setLogResult] = useState("")
+  const [showResult, setShowResult] = useState(false)
 
-  const [logName, setLogName] = useState("");
-  const [relatedType, setRelatedType] = useState("");
-  const [dateOfLog, setDateOfLog] = useState("");
-  const [comment, setComment] = useState("");
-  const [file, setFile] = useState(null);
-  const [healthLogBox,setHealthLogBox] = useState(false);
-  const [logResult,setLogResult] = useState("");
-  const [types,setTypes] = useState<Plant[]>([]);
-  const [healthLogs,setHealthLogs]= useState<HealthLog[]>([]); 
-  const [logTypeId,setLogypeId] = useState("");
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setIsLoading(true)
+      try {
+        const userId = localStorage.getItem("_id")
+        const [plantsRes, logsRes] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/plant/getPlantsByUserId/${userId}`, {
+            headers: { Authorization: localStorage.getItem("token") },
+            withCredentials: true,
+          }),
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/healthlog/getHealthLogsByUserId/${userId}`, {
+            headers: { Authorization: localStorage.getItem("token") },
+            withCredentials: true,
+          }),
+        ])
 
-  useEffect(()=>{
-
-    const fetchHealthLogs = async () => {
-      const _id = localStorage.getItem("_id");
-
-      const logs = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/healthLog/getHealthLogsByUserId/${_id}`,{
-        headers: {
-          'Authorization': localStorage.getItem("token"),
-        },
-        withCredentials: true
-      });
-      console.log("logs",logs.data);
-      
-      setHealthLogs(logs.data);
+        setTypes(plantsRes.data.map((p: Plant) => ({ _id: p._id, name: p.name })))
+        setHealthLogs(logsRes.data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
+    fetchAllData()
+  }, [])
 
-    const fetchPlants =async () => {
-      const _id = localStorage.getItem("_id")
-
-      const plants = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/plant/getPlantsByUserId/${_id}`,{
-        headers: {
-          'Authorization': localStorage.getItem("token"),
-        },
-        withCredentials: true
-      });
-      console.log(plants.data);
-      const plantNames = plants.data.map((plant: Plant) => ({_id: plant._id, name: plant.name}));
-      console.log(plantNames);
-      setTypes(plantNames)
-    }
-
-    fetchPlants();
-    fetchHealthLogs();
-  },[]);
-
-  const filteredLogs = logType ? healthLogs.filter((log: HealthLog) => log.plant_id === logTypeId) : healthLogs;
-
+  const filteredLogs = logType
+    ? healthLogs.filter((log) => log.plant_id === logTypeId)
+    : healthLogs
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setFile(event.target.files[0] as unknown as null);
-    }
-  };
+    if (event.target.files) setFile(event.target.files[0])
+  }
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const data = {
-      user_id : localStorage.getItem("_id"),
-      attachment : file,
-      plant_id : relatedType,
-      dateOfDiagnosis : dateOfLog,
-      comment : comment,
-      name : logName
-    }
-    console.log(data);
-    
-    const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/healthlog/createNewHealthLog/`,data,{
-      headers: {
-        'Authorization': localStorage.getItem("token"),
-        'Content-Type': 'multipart/form-data'
-      },
-      withCredentials: true
-    });
-    console.log(res.data);
-    
-    setHealthLogBox(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!logName || !relatedType || !file)
+      return toast.error("Please fill in all required fields")
+
+    const data = new FormData()
+    data.append("user_id", localStorage.getItem("_id") || "")
+    data.append("attachment", file)
+    data.append("plant_id", relatedType)
+    data.append("dateOfDiagnosis", dateOfLog)
+    data.append("comment", comment)
+    data.append("name", logName)
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/api/healthlog/createNewHealthLog/`,
+      data,
+      {
+        headers: {
+          Authorization: localStorage.getItem("token"),
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+      }
+    )
+
+    toast.success("Health Log Created Successfully 🌿")
+    setShowResult(true)
     setLogResult(res.data.diagnosisByModel)
-    toast.success("Log Created Successfully")
-  }  
+  }
 
-
-  const handleSaveClick = () => {
-    setLogName("");
-    setRelatedType("");
-    setDateOfLog("");
-    setFile(null);
-    setComment("");
-    setLogResult("");
-    setHealthLogBox(false);
+  const handleSave = () => {
+    setLogName("")
+    setRelatedType("")
+    setDateOfLog("")
+    setComment("")
+    setFile(null)
+    setLogResult("")
+    setShowResult(false)
     toast.success("Log Saved Successfully")
   }
 
-  
-
   return (
-    <div className="px-4 py-4 " style={{ maxHeight: '100vh', overflowY: 'auto' }}>
-      <div className="flex flex-row justify-between">
-        <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">
-          HealthLogs
+    <div className="px-6 py-10 bg-gray-50 min-h-screen overflow-y-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">
+          Health Logs
         </h1>
-        <div className="my-2 gap-2 flex flex-row">
-        <div className="bg-black text-white px-4 rounded-md">
+
+        {/* Filter + Create */}
+        <div className="flex items-center gap-3">
+          {/* Filter */}
           <DropdownMenu>
-          <DropdownMenuTrigger className="flex flex-row items-center gap-3 py-2"><FaCaretDown /> <div>{logType || "All Logs"}</div></DropdownMenuTrigger>
-          <DropdownMenuContent>
-          {types.map((type: Plant, index) => (
-                  <DropdownMenuItem key={index} onSelect={() =>{ setLogType(type.name); setLogypeId(type._id)}}>
-                    {type.name}
-                  </DropdownMenuItem>
-                ))}
-          <DropdownMenuItem onSelect={() => setLogType(null)}>All Logs</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        </div>
-        <div>
-            <Dialog>
-              <DialogTrigger>
-                <Button>
-                  + Create Log
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="font-semibold h-[60vh] overflow-auto">
-                <DialogHeader>
-                  <DialogTitle className="text-3xl font-bold">Create Log</DialogTitle>
-                </DialogHeader>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2 border-gray-300">
+                <FaCaretDown />
+                {logType || "All Logs"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {types.map((type, i) => (
+                <DropdownMenuItem
+                  key={i}
+                  onSelect={() => {
+                    setLogType(type.name)
+                    setLogTypeId(type._id)
+                  }}
+                >
+                  {type.name}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuItem onSelect={() => setLogType(null)}>
+                All Logs
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-                <label>
-                  Log Name:
-                  <Input value={logName} onChange={e => setLogName(e.target.value)} />
-                </label>
+          {/* Create New Log */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-green-600 hover:bg-green-700 text-white">
+                + New Log
+              </Button>
+            </DialogTrigger>
 
-                <label>
-                  Plant Name:
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="flex flex-row items-center gap-3 py-2"><FaCaretDown /> <div>{relatedType || "Select Type"}</div></DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      {types.map((type: Plant, index) => (
-                        <DropdownMenuItem key={index} onSelect={() => setRelatedType(type._id)}>
-                          {type.name}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </label>
+            <DialogContent className="max-w-md font-semibold space-y-4">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold">
+                  Create Health Log
+                </DialogTitle>
+              </DialogHeader>
 
-                <label>
-                  Date of Log:
-                  <Input type="date" value={dateOfLog} onChange={e => setDateOfLog(e.target.value)} />
-                </label>
+              <label>Log Name</label>
+              <Input
+                value={logName}
+                onChange={(e) => setLogName(e.target.value)}
+                placeholder="e.g. Fungal Leaf Spot"
+              />
 
-                <label>
-                  Comments (if any):
-                  <Input className="my-2" value={comment} onChange={e => setComment(e.target.value)} />
-                </label>
+              <label>Plant</label>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-3 py-2 border border-gray-300 rounded-md px-3 text-sm text-gray-600">
+                  <FaCaretDown /> {relatedType || "Select Plant"}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {types.map((type, i) => (
+                    <DropdownMenuItem
+                      key={i}
+                      onSelect={() => setRelatedType(type._id)}
+                    >
+                      {type.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-                <label>
-                  Image:
-                  <Input type="file" className='w-full my-2' onChange={handleFileChange} />
-                </label>
+              <label>Date of Diagnosis</label>
+              <Input
+                type="date"
+                value={dateOfLog}
+                onChange={(e) => setDateOfLog(e.target.value)}
+              />
 
-                <Button onClick={handleSubmit}>
-                  Submit
-                </Button>
-                {healthLogBox && (
-                  <div className="flex flex-col gap-6">
-                     <label>
-                      <h1 className="font-semibold">
-                        Log Result
-                      </h1>
-                      <div>
-                        <textarea disabled placeholder="Log Result" value={logResult} className="w-full h-40 mt-2"/>
-                      </div>
-                     </label>
-                     <Button onClick={handleSaveClick}>
-                        Save
-                     </Button>
-                  </div>
-                )}
-              </DialogContent>
-            </Dialog>
-          </div>
+              <label>Comments</label>
+              <Input
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Any observations..."
+              />
+
+              <label>Image</label>
+              <Input type="file" onChange={handleFileChange} />
+
+              <Button
+                onClick={handleSubmit}
+                className="mt-4 bg-green-600 hover:bg-green-700 text-white w-full"
+              >
+                Submit
+              </Button>
+
+              {/* Model Result */}
+              {showResult && (
+                <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <h3 className="font-semibold mb-2 text-gray-700">Model Diagnosis</h3>
+                  <textarea
+                    disabled
+                    value={logResult}
+                    className="w-full h-32 p-2 border border-gray-200 rounded-md text-sm text-gray-700 resize-none bg-white"
+                  />
+                  <Button
+                    onClick={handleSave}
+                    className="mt-3 bg-green-600 hover:bg-green-700 text-white w-full"
+                  >
+                    Save
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
-      <div className="mt-6 mx-8 grid grid-cols-3 gap-6 overflow-y-auto" style={{ maxHeight: '400px' }}>
-            {(filteredLogs).map((healthLog: HealthLog, index: number) => (
-                <div key={index}>
-                  <HealthLogCard
-                  image={healthLog.attachment} 
-                  name={healthLog.name}
-                  _id = {healthLog._id}
-                  dateofDiagnosis = {healthLog.dateOfDiagnosis}
-                  comment = {healthLog.comment}
-                  />
-                </div>
-            ))}
-          </div>
+
+      {/* Content */}
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64 text-gray-600">
+          <FaSpinner className="animate-spin text-green-600 text-2xl" />
+        </div>
+      ) : (
+        <motion.div
+          layout
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4"
+        >
+          {filteredLogs.map((log, i) => (
+            <HealthLogCard
+              key={log._id || i}
+              image={log.attachment}
+              name={log.name}
+              _id={log._id}
+              dateofDiagnosis={log.dateOfDiagnosis}
+              comment={log.comment}
+            />
+          ))}
+          {filteredLogs.length === 0 && (
+            <p className="text-gray-500 col-span-full text-center mt-10">
+              No logs found for this plant.
+            </p>
+          )}
+        </motion.div>
+      )}
     </div>
   )
 }

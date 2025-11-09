@@ -1,48 +1,73 @@
 import { useNavigate } from "react-router-dom"
-import { FaLeaf } from 'react-icons/fa';
-import { IoIosCalendar } from 'react-icons/io';
+import { FaLeaf } from "react-icons/fa"
+import { IoIosCalendar } from "react-icons/io"
 
 interface PlantCardProps {
-  plantName: string;
-  plantimage: string;
-  species: string;
-  plantDop: string;
-  plantcomment: string;
-  plantId: string;
+  plantName: string
+  plantimage: string
+  species: string
+  plantDop: string
+  plantcomment: string
+  plantId: string
 }
 
-const PlantCard: React.FC<PlantCardProps> = ({plantName, plantimage, species, plantDop, plantcomment, plantId}) => {
-
-    const navigate = useNavigate()
-
-    const date = new Date(plantDop);
-    const formattedDate = `${date.getDate()}-${date.getMonth()+1}-${date.getFullYear()}`;
+const PlantCard: React.FC<PlantCardProps> = ({
+  plantName,
+  plantimage,
+  species,
+  plantDop,
+  plantcomment,
+  plantId,
+}) => {
+  const navigate = useNavigate()
+  const date = new Date(plantDop)
+  const formattedDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`
 
   return (
-    <div onClick={()=>navigate(`/plant/${plantId}`)}  className="bg-gray-300 w-72 h-40 shadow-md rounded-md">
-        <div className="bg-gray-100 h-20 rounded-t">
-             <img src={plantimage} className='w-full h-20 object-cover rounded-t-md'></img>
-         </div>
-         <div className="bg-gray-300 h-20 flex flex-col justify-between px-1 py-1">
-            <div className="font-bold text-xl">
-            {plantName}
-            </div>
-            <div className="flex flex-row justify-between font-medium text-sm">
-            <div className="flex items-center gap-2">
-                <FaLeaf opacity={.5}/>
-                <div>{species}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                <IoIosCalendar opacity={.5}/>
-                <div>{formattedDate}</div>
-                </div>
-            </div>
-            <div className="text-xs">
-                {plantcomment}
-            </div>
-         </div>
+    <div
+      onClick={() => navigate(`/plant/${plantId}`)}
+      className="group relative cursor-pointer rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-all bg-white hover:translate-y-[-2px]"
+    >
+      {/* Plant Image */}
+      <div className="h-40 w-full overflow-hidden">
+        <img
+          src={plantimage}
+          alt={plantName}
+          className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+      </div>
+
+      {/* Plant Info */}
+      <div className="p-4 space-y-2">
+        {/* Plant Name */}
+        <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">
+          {plantName}
+        </h3>
+
+        {/* Species & Date */}
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center gap-1.5">
+            <FaLeaf className="text-green-600 opacity-70" size={14} />
+            <span className="font-medium">{species}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <IoIosCalendar className="text-green-600 opacity-70" size={15} />
+            <span>{formattedDate}</span>
+          </div>
+        </div>
+
+        {/* Comment */}
+        {plantcomment && (
+          <p className="text-xs text-gray-500 line-clamp-2 pt-1 italic">
+            “{plantcomment}”
+          </p>
+        )}
+      </div>
+
+      {/* Accent Bar */}
+      <div className="absolute left-0 bottom-0 w-full h-1 bg-green-500/60 group-hover:bg-green-600 transition-all duration-300" />
     </div>
   )
 }
 
-export default PlantCard;
+export default PlantCard
