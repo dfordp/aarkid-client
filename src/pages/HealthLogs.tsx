@@ -19,6 +19,7 @@ import axios from "axios"
 import HealthLogCard from "@/components/elements/HealthLogCard"
 import toast from "react-hot-toast"
 import { motion } from "framer-motion"
+import { useNavigate } from "react-router-dom"
 
 interface Plant {
   _id: string
@@ -47,8 +48,10 @@ const HealthLogs = () => {
   const [dateOfLog, setDateOfLog] = useState("")
   const [comment, setComment] = useState("")
   const [file, setFile] = useState<File | null>(null)
-  const [logResult, setLogResult] = useState("")
+  const [, setLogResult] = useState("")
   const [showResult, setShowResult] = useState(false)
+  const navigate = useNavigate()
+  const [createdLogId, setCreatedLogId] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -87,45 +90,52 @@ const HealthLogs = () => {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!logName || !relatedType || !file)
-      return toast.error("Please fill in all required fields")
+      e.preventDefault()
+      if (!logName || !relatedType || !file)
+        return toast.error("Please fill in all required fields")
 
-    const data = new FormData()
-    data.append("user_id", localStorage.getItem("_id") || "")
-    data.append("attachment", file)
-    data.append("plant_id", relatedType)
-    data.append("dateOfDiagnosis", dateOfLog)
-    data.append("comment", comment)
-    data.append("name", logName)
+      const data = new FormData()
+      data.append("user_id", localStorage.getItem("_id") || "")
+      data.append("attachment", file)
+      data.append("plant_id", relatedType)
+      data.append("dateOfDiagnosis", dateOfLog)
+      data.append("comment", comment)
+      data.append("name", logName)
 
-    const res = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL}/api/healthlog/createNewHealthLog/`,
-      data,
-      {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-          "Content-Type": "multipart/form-data",
-        },
-        withCredentials: true,
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/healthlog/createNewHealthLog/`,
+        data,
+        {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true,
+        }
+      )
+
+      toast.success("Health Log Created Successfully 🌿")
+      setShowResult(true)
+      setLogResult(res.data.diagnosisByModel)
+      setCreatedLogId(res.data._id) // store new log id
+    }
+
+    const handleSave = () => {
+      if (createdLogId) {
+        toast.success("Redirecting to Health Log...")
+        navigate(`/healthlog/${createdLogId}`)
       }
-    )
 
-    toast.success("Health Log Created Successfully 🌿")
-    setShowResult(true)
-    setLogResult(res.data.diagnosisByModel)
-  }
-
-  const handleSave = () => {
-    setLogName("")
-    setRelatedType("")
-    setDateOfLog("")
-    setComment("")
-    setFile(null)
-    setLogResult("")
-    setShowResult(false)
-    toast.success("Log Saved Successfully")
-  }
+      // Reset dialog state
+      setLogName("")
+      setRelatedType("")
+      setDateOfLog("")
+      setComment("")
+      setFile(null)
+      setLogResult("")
+      setShowResult(false)
+      setCreatedLogId(null)
+    }
 
   return (
     <div className="px-6 py-10 bg-gray-50 min-h-screen overflow-y-auto">
@@ -164,82 +174,123 @@ const HealthLogs = () => {
           </DropdownMenu>
 
           {/* Create New Log */}
-          <Dialog>
+         <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-green-600 hover:bg-green-700 text-white">
+              <Button className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm transition-all">
                 + New Log
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="max-w-md font-semibold space-y-4">
+            <DialogContent className="max-w-md rounded-xl p-6 font-semibold bg-white shadow-lg border border-gray-100 space-y-5">
+              {/* Header */}
               <DialogHeader>
-                <DialogTitle className="text-2xl font-bold">
+                <DialogTitle className="text-2xl font-bold text-gray-800">
                   Create Health Log
                 </DialogTitle>
+                <p className="text-sm text-gray-500 font-normal">
+                  Record a new health entry for one of your plants.
+                </p>
               </DialogHeader>
 
-              <label>Log Name</label>
-              <Input
-                value={logName}
-                onChange={(e) => setLogName(e.target.value)}
-                placeholder="e.g. Fungal Leaf Spot"
-              />
-
-              <label>Plant</label>
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-3 py-2 border border-gray-300 rounded-md px-3 text-sm text-gray-600">
-                  <FaCaretDown /> {relatedType || "Select Plant"}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {types.map((type, i) => (
-                    <DropdownMenuItem
-                      key={i}
-                      onSelect={() => setRelatedType(type._id)}
-                    >
-                      {type.name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <label>Date of Diagnosis</label>
-              <Input
-                type="date"
-                value={dateOfLog}
-                onChange={(e) => setDateOfLog(e.target.value)}
-              />
-
-              <label>Comments</label>
-              <Input
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Any observations..."
-              />
-
-              <label>Image</label>
-              <Input type="file" onChange={handleFileChange} />
-
-              <Button
-                onClick={handleSubmit}
-                className="mt-4 bg-green-600 hover:bg-green-700 text-white w-full"
-              >
-                Submit
-              </Button>
-
-              {/* Model Result */}
-              {showResult && (
-                <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                  <h3 className="font-semibold mb-2 text-gray-700">Model Diagnosis</h3>
-                  <textarea
-                    disabled
-                    value={logResult}
-                    className="w-full h-32 p-2 border border-gray-200 rounded-md text-sm text-gray-700 resize-none bg-white"
+              {/* Form Fields */}
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Log Name
+                  </label>
+                  <Input
+                    value={logName}
+                    onChange={(e) => setLogName(e.target.value)}
+                    placeholder="e.g. Fungal Leaf Spot"
+                    className="border-gray-300 focus-visible:ring-green-600"
                   />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Plant
+                  </label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center justify-between gap-2 py-2 border border-gray-300 rounded-md px-3 text-sm text-gray-700 hover:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 transition-all">
+                      <span>
+                        {relatedType
+                          ? types.find((t) => t._id === relatedType)?.name
+                          : "Select Plant"}
+                      </span>
+                      <FaCaretDown className="text-gray-500" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="rounded-md shadow-lg border border-gray-100">
+                      {types.length > 0 ? (
+                        types.map((type, i) => (
+                          <DropdownMenuItem
+                            key={i}
+                            onSelect={() => setRelatedType(type._id)}
+                            className="text-sm text-gray-700 hover:text-green-700"
+                          >
+                            {type.name}
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-xs text-gray-500">
+                          No plants available yet.
+                        </div>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Date of Diagnosis
+                  </label>
+                  <Input
+                    type="date"
+                    value={dateOfLog}
+                    onChange={(e) => setDateOfLog(e.target.value)}
+                    className="border-gray-300 focus-visible:ring-green-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Comments
+                  </label>
+                  <Input
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Any observations..."
+                    className="border-gray-300 focus-visible:ring-green-600"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Image
+                  </label>
+                  <Input
+                    type="file"
+                    onChange={handleFileChange}
+                    className="border-gray-300 focus-visible:ring-green-600"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  onClick={handleSubmit}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold shadow-sm transition-all"
+                >
+                  Submit
+                </Button>
+              </div>
+
+              {showResult && (
+                <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3 animate-in fade-in duration-200">
                   <Button
                     onClick={handleSave}
-                    className="mt-3 bg-green-600 hover:bg-green-700 text-white w-full"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold shadow-sm"
                   >
-                    Save
+                    View Log
                   </Button>
                 </div>
               )}

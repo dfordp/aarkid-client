@@ -38,8 +38,7 @@ const TopBar = () => {
         <div
           className="flex items-center gap-2 cursor-pointer select-none"
           onClick={() => {
-            if (isAuthenticated) navigate("/plants")
-            else navigate("/")
+            navigate("/")
           }}
         >
           <Leaf className="h-8 w-8 text-green-600" />

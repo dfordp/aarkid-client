@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { useRecoilValue } from "recoil"
 import { Authenticated } from "./atom"
 
@@ -22,29 +22,39 @@ import Chat from "./pages/Chat"
 
 const AppRoutes = () => {
   const isAuthenticated = useRecoilValue(Authenticated)
+  const location = useLocation()
 
-  // ✅ Public routes (no TopBar / Sidebar)
-  if (!isAuthenticated) {
+  const isLanding = location.pathname === "/"
+
+  // ✅ Always show Landing Page without layout
+  if (isLanding) {
     return (
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        {/* Allow unauthenticated users to visit login/onboarding directly */}
         <Route path="/auth" element={<Auth />} />
         <Route path="/onboarding" element={<Onboarding />} />
-        {/* Redirect any authenticated-only routes back to login */}
+      </Routes>
+    )
+  }
+
+  // ✅ Public routes (no layout)
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/onboarding" element={<Onboarding />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     )
   }
 
-  // ✅ Authenticated layout with TopBar + Sidebar
+  // ✅ Authenticated layout (TopBar + Sidebar)
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
       <TopBar />
       <div className="flex flex-row mt-16">
-        {/* Sidebar */}
         <Sidebar />
-
-        {/* Main content area */}
         <div className="md:ml-20 flex-1 bg-gray-50 min-h-[calc(100vh-4rem)] overflow-y-auto">
           <Routes>
             <Route path="/plants" element={<Plants />} />
@@ -54,7 +64,6 @@ const AppRoutes = () => {
             <Route path="/healthlog/:id" element={<HealthLog />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/chat" element={<Chat />} />
-            {/* Redirect any non-existing routes to /plants */}
             <Route path="*" element={<Navigate to="/plants" replace />} />
           </Routes>
         </div>
@@ -63,12 +72,10 @@ const AppRoutes = () => {
   )
 }
 
-const App = () => {
-  return (
-    <Router>
-      <AppRoutes />
-    </Router>
-  )
-}
+const App = () => (
+  <Router>
+    <AppRoutes />
+  </Router>
+)
 
 export default App
