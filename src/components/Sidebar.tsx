@@ -37,7 +37,7 @@ const Sidebar = () => {
       className="
         hidden md:flex 
         fixed top-16 left-0 z-20 
-        h-[60vh] w-20 
+        h-[100vh-6rem] w-20 
         bg-white/90 backdrop-blur-lg 
         border-r border-gray-100 
         shadow-lg rounded-tr-2xl rounded-br-2xl
@@ -45,7 +45,7 @@ const Sidebar = () => {
       "
     >
       {/* Navigation */}
-      <nav className="flex flex-col items-center gap-6 mt-4">
+      <nav className="flex flex-col items-center gap-6 mt-2">
         {menuItems.map((item) => {
           const IconComponent = item.icon
           const isActive = location.pathname === item.path
