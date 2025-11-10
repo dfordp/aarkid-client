@@ -20,7 +20,7 @@ import { useRecoilValue } from "recoil"
 import { User, UserI } from "@/atom"
 import PlantCard from "@/components/elements/PlantCard"
 import toast from "react-hot-toast"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface Plant {
   species: string
@@ -35,6 +35,10 @@ const Plants = () => {
   const [plantSpecies, setPlantSpecies] = useState<string | null>(null)
   const [plants, setPlants] = useState<Plant[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+
+  // Dialog form states
   const [plantName, setPlantName] = useState("")
   const [relatedSpecies, setRelatedSpecies] = useState("")
   const [dateOfPlantation, setDateOfPlantation] = useState("")
@@ -44,6 +48,7 @@ const Plants = () => {
   const [newSpecies, setNewSpecies] = useState("")
   const user = useRecoilValue<UserI | null>(User)
 
+  // ✅ Fetch paginated plants
   useEffect(() => {
     const fetchPlants = async () => {
       setIsLoading(true)
@@ -51,44 +56,55 @@ const Plants = () => {
         if (user?.plantSpecies) setSpecies(user.plantSpecies)
         const _id = localStorage.getItem("_id")
         const res = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/plant/getPlantsByUserId/${_id}`,
+          `${import.meta.env.VITE_BACKEND_URL}/api/plant/getPlantsByUserId/${_id}?page=${page}&limit=9`,
           {
             headers: { Authorization: localStorage.getItem("token") },
             withCredentials: true,
           }
         )
-        setPlants(res.data)
+
+        setPlants(res.data.data || [])
+        setTotalPages(res.data.totalPages || 1)
       } catch (err) {
         console.error(err)
+        toast.error("Failed to load plants.")
       } finally {
         setIsLoading(false)
       }
     }
     fetchPlants()
-  }, [user])
+  }, [page, user])
 
+  // ✅ Filter logic
   const filteredPlants = plantSpecies
     ? plants.filter((p) => p.species === plantSpecies)
     : plants
 
+  // ✅ Add a new species
   const handleAddSpecies = async () => {
     if (!newSpecies.trim()) return toast.error("Please enter a valid species name")
-    const newList = [...species, newSpecies.trim()]
-    const id = localStorage.getItem("_id")
-    await axios.patch(
-      `${import.meta.env.VITE_BACKEND_URL}/api/user/updateUser/${id}`,
-      { plantSpecies: newList },
-      {
-        headers: { Authorization: localStorage.getItem("token") },
-        withCredentials: true,
-      }
-    )
-    toast.success("New species added successfully 🌱")
-    setSpecies(newList)
-    setRelatedSpecies(newSpecies.trim())
-    setNewSpecies("")
+    const updatedList = [...species, newSpecies.trim()]
+
+    try {
+      const id = localStorage.getItem("_id")
+      await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/user/updateUser/${id}`,
+        { plantSpecies: updatedList },
+        {
+          headers: { Authorization: localStorage.getItem("token") },
+          withCredentials: true,
+        }
+      )
+      toast.success("New species added successfully 🌱")
+      setSpecies(updatedList)
+      setRelatedSpecies(newSpecies.trim())
+      setNewSpecies("")
+    } catch {
+      toast.error("Failed to add species.")
+    }
   }
 
+  // ✅ Add new plant
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!plantName || !relatedSpecies || !file)
@@ -102,24 +118,28 @@ const Plants = () => {
     data.append("comment", comment)
     data.append("image", file)
 
-    const res = await axios.post(
-      `${import.meta.env.VITE_BACKEND_URL}/api/plant/createNewPlant`,
-      data,
-      {
-        headers: {
-          Authorization: localStorage.getItem("token"),
-          "Content-Type": "multipart/form-data",
-        },
-        withCredentials: true,
-      }
-    )
-    toast.success("New Plant Added Successfully 🌿")
-    setPlants((prev) => [...prev, res.data])
-    setPlantName("")
-    setRelatedSpecies("")
-    setDateOfPlantation("")
-    setComment("")
-    setFile(null)
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/plant/createNewPlant`,
+        data,
+        {
+          headers: {
+            Authorization: localStorage.getItem("token"),
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true,
+        }
+      )
+      toast.success("New Plant Added Successfully 🌿")
+      setPlants((prev) => [...prev, res.data])
+      setPlantName("")
+      setRelatedSpecies("")
+      setDateOfPlantation("")
+      setComment("")
+      setFile(null)
+    } catch {
+      toast.error("Error adding plant.")
+    }
   }
 
   return (
@@ -127,17 +147,15 @@ const Plants = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">
-          My Plants
+          Plants
         </h1>
 
-        {/* Species Filter + Add Button */}
+        {/* Filter + Add Plant */}
         <div className="flex items-center gap-3">
+          {/* Filter Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="flex items-center gap-2 border-gray-300"
-              >
+              <Button variant="outline" className="flex items-center gap-2 border-gray-300">
                 <FaCaretDown /> {plantSpecies || "All Species"}
               </Button>
             </DropdownMenuTrigger>
@@ -153,7 +171,7 @@ const Plants = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Add Plant Button */}
+          {/* Add New Plant Dialog */}
           <Dialog>
             <DialogTrigger asChild>
               <Button className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm transition-all">
@@ -171,155 +189,160 @@ const Plants = () => {
                 </p>
               </DialogHeader>
 
-              {/* Form Fields */}
+              {/* Form */}
               <div className="space-y-4">
-                {/* Plant Name */}
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Plant Name
-                  </label>
-                  <Input
-                    value={plantName}
-                    onChange={(e) => setPlantName(e.target.value)}
-                    placeholder="e.g. Monstera"
-                    className="border-gray-300 focus-visible:ring-green-600"
-                  />
-                </div>
-
-                {/* Species */}
-                <div className="space-y-1">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Species
-                  </label>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center justify-between gap-2 py-2 border border-gray-300 rounded-md px-3 text-sm text-gray-700 hover:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 transition-all">
-                      <span>{relatedSpecies || "Select Species"}</span>
-                      <FaCaretDown className="text-gray-500" />
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent className="rounded-md shadow-lg border border-gray-100">
-                          {species.length > 0 ? (
-                            species.map((sp, i) => (
-                              <DropdownMenuItem
-                                key={i}
-                                onSelect={() => setRelatedSpecies(sp)}
-                                className="text-sm text-gray-700 hover:text-green-700"
-                              >
-                                {sp}
-                              </DropdownMenuItem>
-                            ))
-                          ) : (
-                            <div className="px-3 py-2 text-xs text-gray-500">
-                              No species found yet.
-                            </div>
-                          )}
-
-                          {/* Add new species */}
-                          <div className="px-3 py-3 border-t border-gray-100 bg-gray-50 rounded-b-md space-y-2">
-                            <p className="text-xs text-gray-500">Add a new species</p>
-                            <div className="flex gap-2">
-                              <Input
-                                value={newSpecies}
-                                onChange={(e) => setNewSpecies(e.target.value)}
-                                placeholder="e.g. Ficus Lyrata"
-                                className="text-sm flex-1 border-gray-300"
-                              />
-                              <Button
-                                size="sm"
-                                onClick={handleAddSpecies}
-                                className="bg-green-600 hover:bg-green-700 text-white px-3 py-1"
-                              >
-                                +
-                              </Button>
-                            </div>
-                          </div>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                <Input
+                  placeholder="Plant Name"
+                  value={plantName}
+                  onChange={(e) => setPlantName(e.target.value)}
+                  className="border-gray-300 focus-visible:ring-green-600"
+                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center justify-between gap-2 py-2 border border-gray-300 rounded-md px-3 text-sm text-gray-700 hover:border-green-500 focus:ring-green-500 transition-all">
+                    <span>{relatedSpecies || "Select Species"}</span>
+                    <FaCaretDown className="text-gray-500" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="rounded-md shadow-lg border border-gray-100">
+                    {species.length > 0 ? (
+                      species.map((sp, i) => (
+                        <DropdownMenuItem
+                          key={i}
+                          onSelect={() => setRelatedSpecies(sp)}
+                          className="text-sm text-gray-700 hover:text-green-700"
+                        >
+                          {sp}
+                        </DropdownMenuItem>
+                      ))
+                    ) : (
+                      <div className="px-3 py-2 text-xs text-gray-500">
+                        No species found yet.
+                      </div>
+                    )}
+                    <div className="px-3 py-3 border-t border-gray-100 bg-gray-50 rounded-b-md space-y-2">
+                      <p className="text-xs text-gray-500">Add a new species</p>
+                      <div className="flex gap-2">
+                        <Input
+                          value={newSpecies}
+                          onChange={(e) => setNewSpecies(e.target.value)}
+                          placeholder="e.g. Ficus Lyrata"
+                          className="text-sm flex-1 border-gray-300"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={handleAddSpecies}
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1"
+                        >
+                          +
+                        </Button>
+                      </div>
                     </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-                    {/* Date of Plantation */}
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Date of Plantation
-                      </label>
-                      <Input
-                        type="date"
-                        value={dateOfPlantation}
-                        onChange={(e) => setDateOfPlantation(e.target.value)}
-                        className="border-gray-300 focus-visible:ring-green-600"
-                      />
-                    </div>
+                <Input
+                  type="date"
+                  value={dateOfPlantation}
+                  onChange={(e) => setDateOfPlantation(e.target.value)}
+                  className="border-gray-300 focus-visible:ring-green-600"
+                />
+                <Input
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Comment or note..."
+                  className="border-gray-300 focus-visible:ring-green-600"
+                />
+                <Input
+                  type="file"
+                  onChange={(e) =>
+                    setFile(e.target.files ? e.target.files[0] : null)
+                  }
+                  className="border-gray-300 focus-visible:ring-green-600"
+                />
+              </div>
 
-                    {/* Comments */}
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Comment
-                      </label>
-                      <Input
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        placeholder="Optional notes..."
-                        className="border-gray-300 focus-visible:ring-green-600"
-                      />
-                    </div>
-
-                    {/* Image */}
-                    <div className="space-y-1">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Image
-                      </label>
-                      <Input
-                        type="file"
-                        onChange={(e) =>
-                          setFile(e.target.files ? e.target.files[0] : null)
-                        }
-                        className="border-gray-300 focus-visible:ring-green-600"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  <div className="pt-4 flex justify-end">
-                    <Button
-                      onClick={handleSubmit}
-                      className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-sm transition-all"
-                    >
-                      Add Plant
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
+              <div className="pt-4 flex justify-end">
+                <Button
+                  onClick={handleSubmit}
+                  className="bg-green-600 hover:bg-green-700 text-white font-semibold shadow-sm transition-all"
+                >
+                  Add Plant
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
-      {/* Loading State */}
+      {/* Loading or Plant Grid */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <FaSpinner className="animate-spin text-green-600 text-2xl" />
         </div>
       ) : (
-        <motion.div
-          layout
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6"
-        >
-          {filteredPlants.map((plant, i) => (
-            <PlantCard
-              key={plant._id || i}
-              plantName={plant.name}
-              plantimage={plant.image}
-              species={plant.species}
-              plantDop={plant.dateOfPlanting}
-              plantcomment={plant.comment}
-              plantId={plant._id}
-            />
-          ))}
-          {filteredPlants.length === 0 && (
-            <p className="text-gray-500 col-span-full text-center mt-10">
-              No plants found for this species.
-            </p>
-          )}
-        </motion.div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={page + (plantSpecies || "all")}
+            layout
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6"
+          >
+            {filteredPlants.length > 0 ? (
+              filteredPlants.map((plant, i) => (
+                <motion.div
+                  key={plant._id || i}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <PlantCard
+                    plantId={plant._id}
+                    plantName={plant.name}
+                    plantimage={plant.image}
+                    plantDop={plant.dateOfPlanting}
+                    plantcomment={plant.comment}
+                    species={plant.species}
+                  />
+                </motion.div>
+              ))
+            ) : (
+              <motion.p
+                key="no-plants"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-gray-500 col-span-full text-center mt-10"
+              >
+                No plants found for this species.
+              </motion.p>
+            )}
+          </motion.div>
+
+          {/* Pagination */}
+          <div className="flex justify-center items-center gap-4 mt-8">
+            <Button
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700"
+            >
+              Prev
+            </Button>
+            <span className="text-gray-600 text-sm font-medium">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700"
+            >
+              Next
+            </Button>
+          </div>
+        </AnimatePresence>
       )}
     </div>
   )

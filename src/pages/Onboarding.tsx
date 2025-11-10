@@ -18,10 +18,19 @@ const Onboarding = () => {
   const [name, setName] = useState("")
   const [plantSpecies, setPlantSpecies] = useState<string[]>([])
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [speciesInput, setSpeciesInput] = useState("")
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedFile(event.target.files && event.target.files.length > 0 ? event.target.files[0] : null)
+    const file = event.target.files?.[0] || null
+    setSelectedFile(file)
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => setPreviewUrl(reader.result as string)
+      reader.readAsDataURL(file)
+    } else {
+      setPreviewUrl(null)
+    }
   }
 
   const handleAddPlantSpecies = () => {
@@ -35,7 +44,7 @@ const Onboarding = () => {
     setPlantSpecies(plantSpecies.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = async (event: { preventDefault: () => void }) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     try {
       if (!name.trim()) {
@@ -52,9 +61,7 @@ const Onboarding = () => {
       const res = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/auth/register`,
         formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       )
 
       const { token, newUser } = res.data
@@ -70,90 +77,142 @@ const Onboarding = () => {
   }
 
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center bg-gradient-to-b from-white to-green-50">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="bg-white rounded-2xl shadow-md border border-green-100 w-full max-w-3xl p-10"
-      >
-        {/* Header */}
-        <div className="flex flex-col items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Aarchid</h1>
-          <p className="text-gray-600 text-sm max-w-md text-center">
-            Let’s personalize your experience. Add your details and tell us about the plants you care for.
-          </p>
-        </div>
-
-        {/* Form */}
-        <form className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label className="font-semibold text-gray-700 text-sm">Email</label>
-            <InputDisabled value={email} className="my-2" />
+    <div className="h-screen w-screen flex flex-col md:flex-row bg-white">
+      {/* Left Section - Onboarding Form */}
+      <div className="flex flex-col justify-center items-center md:w-1/2 px-8 md:px-20 py-12">
+        <motion.div
+          initial={{ opacity: 0, x: -40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-lg"
+        >
+          {/* Header */}
+          <div className="mb-10">
+            <h1 className="text-3xl font-bold text-gray-900">Welcome to Aarchid</h1>
           </div>
 
-          <div>
-            <label className="font-semibold text-gray-700 text-sm">Name</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="John Doe"
-              className="my-2"
-            />
-          </div>
-
-          <div>
-            <label className="font-semibold text-gray-700 text-sm">Profile Image</label>
-            <Input type="file" className="my-2" onChange={handleFileChange} />
-          </div>
-
-          <div>
-            <label className="font-semibold text-gray-700 text-sm">Your Plant Species</label>
-            <div className="flex items-center gap-2 my-2">
-              <Input
-                type="text"
-                value={speciesInput}
-                onChange={(e) => setSpeciesInput(e.target.value)}
-                placeholder="E.g. Fiddle Leaf Fig"
-                className="flex-1"
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-700 mb-1">Email</label>
+              <InputDisabled
+                value={email}
+                className="rounded-lg border-none bg-gray-50 focus:ring-green-500 focus:border-green-500 shadow-none"
               />
+            </div>
+
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. John Doe"
+                className="rounded-lg border-none bg-gray-50 focus:ring-green-500 focus:border-green-500 shadow-none"
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-700 mb-1">Profile Image</label>
+              <div className="flex flex-col gap-3">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="rounded-lg border-none bg-gray-50 focus:ring-green-500 focus:border-green-500 shadow-none file:mr-0 file:rounded-md file:border-0 file:bg-green-600 file:text-white file:px-4 file:py-2 hover:file:bg-green-700 transition-all w-full"
+                  style={{ paddingRight: 0 }}
+                />
+                {previewUrl && (
+                  <div className="flex justify-start">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="w-24 h-24 object-cover rounded-lg border border-green-200"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Plant Species Section */}
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold text-gray-700 mb-2">
+                Your Plant Species
+              </label>
+              <div className="flex items-center gap-2 mb-3">
+                <Input
+                  type="text"
+                  value={speciesInput}
+                  onChange={(e) => setSpeciesInput(e.target.value)}
+                  placeholder="e.g. Fiddle Leaf Fig"
+                  className="rounded-lg border-none bg-gray-50 focus:ring-green-500 focus:border-green-500 shadow-none"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddPlantSpecies}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all"
+                >
+                  <FaPlus size={14} />
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {plantSpecies.map((species, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-full px-3 py-1 text-sm"
+                  >
+                    <span>{species}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePlantSpecies(index)}
+                      className="hover:text-red-500 transition-colors"
+                    >
+                      <FaTimes size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4">
               <Button
-                type="button"
-                onClick={handleAddPlantSpecies}
-                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
+                type="submit"
+                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg text-base transition-all shadow-sm hover:shadow-md"
               >
-                <FaPlus />
+                Continue
               </Button>
             </div>
+          </form>
 
-            <div className="flex flex-wrap gap-2 mt-2">
-              {plantSpecies.map((species, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 rounded-full px-3 py-1 text-sm"
-                >
-                  <span>{species}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemovePlantSpecies(index)}
-                    className="hover:text-red-500 transition-colors"
-                  >
-                    <FaTimes size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </form>
+        </motion.div>
+      </div>
 
-        {/* Submit */}
-        <div className="flex justify-end mt-10">
-          <Button
-            onClick={handleSubmit}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg text-lg transition-all"
-          >
-            Get Started
-          </Button>
+      {/* Right Section - Image and Quote */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        className="hidden md:flex md:w-1/2 h-full relative bg-green-50 overflow-hidden"
+      >
+        {/* Image */}
+        <img
+          src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&q=80&w=2000"
+          alt="Plants growing with light"
+          className="object-cover w-full h-full"
+        />
+
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-l from-white/80 to-transparent" />
+
+        {/* Motivational Tagline */}
+        <div className="absolute left-10 bottom-16 max-w-xs">
+          <h3 className="text-3xl font-bold text-gray-900 leading-snug">
+            Every plant tells a story.
+          </h3>
+          <p className="text-gray-700 text-sm mt-2">
+            Aarchid helps you listen monitor growth, predict needs, and act with precision.
+          </p>
         </div>
       </motion.div>
     </div>

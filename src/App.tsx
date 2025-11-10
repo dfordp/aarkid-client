@@ -24,21 +24,22 @@ const AppRoutes = () => {
   const isAuthenticated = useRecoilValue(Authenticated)
   const location = useLocation()
 
-  const isLanding = location.pathname === "/"
-
-  // ✅ Always show Landing Page without layout
-  if (isLanding) {
-    return (
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        {/* Allow unauthenticated users to visit login/onboarding directly */}
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/onboarding" element={<Onboarding />} />
-      </Routes>
-    )
+  // --- ✅ Redirect root path based on auth state
+  if (location.pathname === "/") {
+    if (isAuthenticated) {
+      return <Navigate to="/plants" replace />
+    } else {
+      return (
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+        </Routes>
+      )
+    }
   }
 
-  // ✅ Public routes (no layout)
+  // --- 🧭 Public routes (unauthenticated only)
   if (!isAuthenticated) {
     return (
       <Routes>
@@ -49,11 +50,11 @@ const AppRoutes = () => {
     )
   }
 
-  // ✅ Authenticated layout (TopBar + Sidebar)
+  // --- 🔒 Authenticated layout
   return (
     <div className="bg-gray-50 min-h-screen flex flex-col">
       <TopBar />
-      <div className="flex flex-row mt-16">
+      <div className="flex flex-row sm:mt-16 lg:mt-0">
         <Sidebar />
         <div className="md:ml-20 flex-1 bg-gray-50 min-h-[calc(100vh-4rem)] overflow-y-auto">
           <Routes>
@@ -64,6 +65,7 @@ const AppRoutes = () => {
             <Route path="/healthlog/:id" element={<HealthLog />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/chat" element={<Chat />} />
+            {/* Default route */}
             <Route path="*" element={<Navigate to="/plants" replace />} />
           </Routes>
         </div>

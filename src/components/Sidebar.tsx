@@ -37,7 +37,7 @@ const Sidebar = () => {
       className="
         hidden md:flex 
         fixed top-16 left-0 z-20 
-        h-[calc(100vh-4rem)] w-20 
+        h-[60vh] w-20 
         bg-white/90 backdrop-blur-lg 
         border-r border-gray-100 
         shadow-lg rounded-tr-2xl rounded-br-2xl

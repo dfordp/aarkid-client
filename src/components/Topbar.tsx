@@ -31,8 +31,9 @@ const TopBar = () => {
 
   const isLandingPage = location.pathname === "/"
 
+
   return (
-    <header className="w-full bg-white/80 backdrop-blur-md shadow-sm fixed top-0 z-50">
+    <header className={`${isAuthenticated ? "lg:hidden" : "lg:block"} w-full bg-white/80 backdrop-blur-md shadow-sm fixed top-0 z-50`}>
       <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-3 relative">
         {/* Left - Logo */}
         <div
@@ -42,9 +43,6 @@ const TopBar = () => {
           }}
         >
           <Leaf className="h-8 w-8 text-green-600" />
-          <span className="text-lg font-semibold text-green-700 tracking-tight hidden sm:inline">
-            Aarchid
-          </span>
         </div>
 
         {/* Right Section */}

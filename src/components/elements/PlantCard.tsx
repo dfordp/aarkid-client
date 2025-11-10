@@ -1,14 +1,15 @@
 import { useNavigate } from "react-router-dom"
 import { FaLeaf } from "react-icons/fa"
 import { IoIosCalendar } from "react-icons/io"
+import { motion } from "framer-motion"
 
 interface PlantCardProps {
+  plantId: string
+  species: string
   plantName: string
   plantimage: string
-  species: string
   plantDop: string
   plantcomment: string
-  plantId: string
 }
 
 const PlantCard: React.FC<PlantCardProps> = ({
@@ -30,11 +31,19 @@ const PlantCard: React.FC<PlantCardProps> = ({
     >
       {/* Plant Image */}
       <div className="h-40 w-full overflow-hidden">
-        <img
+        {/* <img
           src={plantimage}
           alt={plantName}
           className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+        /> */}
+        <motion.img
+            src={plantimage}
+            alt={plantName}
+            className="w-full h-40 object-cover rounded-t-md"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+          />
       </div>
 
       {/* Plant Info */}
