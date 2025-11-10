@@ -264,6 +264,28 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+      <footer className="py-10 text-center text-gray-500 text-sm border-t border-green-100 mt-auto bg-white">
+        <p>
+          Built with 🌱 by{" "}
+          <a
+            href="https://www.dilpreetgrover.me/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-green-700 hover:text-green-800 transition-colors"
+          >
+            Dilpreet Grover
+          </a>{" "}
+          and{" "}
+          <a
+            href="https://www.linkedin.com/in/dhruvsinghal6888/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-green-700 hover:text-green-800 transition-colors"
+          >
+            Dhruv Singhal
+          </a>
+        </p>
+      </footer>
     </div>
   );
 };
